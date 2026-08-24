@@ -5,11 +5,54 @@ from __future__ import annotations
 import json
 import re
 
-from calllens.domain.transcript import Speaker, Transcript, Utterance
+from calllens.domain.transcript import Speaker, SpeakerRole, Transcript, Utterance
 
 
 class TranscriptParseError(ValueError):
     """Raised when an uploaded transcript cannot be parsed."""
+
+
+_REP_LABELS = {
+    "rep",
+    "reps",
+    "representative",
+    "representatives",
+    "agent",
+    "agents",
+    "sales",
+    "seller",
+    "associate",
+}
+_CUST_LABELS = {
+    "customer",
+    "customers",
+    "client",
+    "clients",
+    "buyer",
+    "buyers",
+    "prospect",
+    "prospects",
+    "caller",
+    "guest",
+}
+
+
+def _infer_role(speaker_id: str) -> SpeakerRole:
+    """Infer a speaker role from a recognizable speaker label."""
+    label = speaker_id.lower().strip()
+    if label in _REP_LABELS:
+        return SpeakerRole.REPRESENTATIVE
+    if label in _CUST_LABELS:
+        return SpeakerRole.CUSTOMER
+    return SpeakerRole.UNKNOWN
+
+
+def _fill_roles(transcript: Transcript) -> Transcript:
+    """Assign inferred roles to speakers that have none."""
+    for speaker in transcript.speakers:
+        if speaker.role == SpeakerRole.UNKNOWN:
+            speaker.role = _infer_role(speaker.id)
+    return transcript
 
 
 def parse_transcript_json(raw: str) -> Transcript:
@@ -28,7 +71,7 @@ def parse_transcript_json(raw: str) -> Transcript:
         speakers = _speakers_from_utterances(utterances)
         return Transcript(utterances=utterances, speakers=speakers, source="json")
     if isinstance(data, dict) and "utterances" in data:
-        return Transcript.model_validate(data)
+        return _fill_roles(Transcript.model_validate(data))
     raise TranscriptParseError(
         "JSON transcript must be an object with 'utterances' or a list of utterances"
     )
@@ -36,7 +79,7 @@ def parse_transcript_json(raw: str) -> Transcript:
 
 def _speakers_from_utterances(utterances: list[Utterance]) -> list[Speaker]:
     ids = list(dict.fromkeys(u.speaker_id for u in utterances))
-    return [Speaker(id=sid) for sid in ids]
+    return [Speaker(id=sid, role=_infer_role(sid)) for sid in ids]
 
 
 _TIMESTAMP_RE = re.compile(

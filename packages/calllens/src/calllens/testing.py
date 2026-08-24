@@ -39,33 +39,36 @@ def _content_score(dimension: str, transcript_text: str) -> float:
     """Deterministic content-based score for the mock scorer.
 
     Maps simple, observable transcript signals to a dimension score so the
-    evaluation harness sees genuine (if crude) signal from the mock.
+    evaluation harness sees genuine (if crude) signal from the mock. The
+    dimension may arrive as a rubric key ("discovery") or a human label
+    ("Problem Discovery"), so matching normalizes to a key form first.
     """
     questions = transcript_text.count("?")
     words = transcript_text.split()
     text = " ".join(words)
+    key = dimension.lower().replace(" ", "_").replace("-", "_")
 
     def _has(*needles: str) -> bool:
         return any(n in text for n in needles)
 
     base: float = 5.0
-    if dimension == "discovery":
+    if "discovery" in key:
         base = 3.5 + min(6.0, questions * 1.2)
-    elif dimension == "rapport":
+    elif "rapport" in key:
         base = 7.0 if _has("thanks", "great", "good", "nice", "pleasure") else 4.0
-    elif dimension == "credentialization":
+    elif "credentialization" in key:
         base = 7.5 if _has("our platform", "we serve", "we have", "our product") else 3.5
-    elif dimension == "ecosystem":
+    elif "ecosystem" in key:
         base = 7.0 if _has("integrates", "ecosystem", "partners", "crm", "stack") else 3.5
-    elif dimension == "adaptability":
+    elif "adaptability" in key:
         base = 7.0 if _has("understand", "hear you", "makes sense", "i see") else 4.0
-    elif dimension in {"adjacent_cross_sell", "future_cross_sell"}:
+    elif "cross" in key and ("adjacent" in key or "future" in key):
         base = 7.5 if _has("also", "add", "package", "premium", "analytics") else 3.0
-    elif dimension == "upsell":
+    elif "upsell" in key:
         base = 7.5 if _has("plan", "upgrade", "premium", "seats", "higher") else 3.0
-    elif dimension == "customer_energy":
+    elif "energy" in key:
         base = 7.0 if _has("huge", "great", "interesting", "love") else 4.0
-    elif dimension == "budget_alignment":
+    elif "budget" in key:
         base = 7.5 if _has("budget", "price", "cost", "thousand", "pricing") else 3.0
     return base
 
