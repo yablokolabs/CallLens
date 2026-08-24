@@ -1,8 +1,8 @@
 """CallLens MCP Server — conversation intelligence over the Model Context Protocol.
 
 Exposes CallLens analysis tools for agents: analyze transcripts, inspect
-rubrics, and get evidence-backed behavioral scores. Uses SSE transport for
-MCPize deployment and stdio for local execution.
+rubrics, and get evidence-backed behavioral scores. Runs over stdio (the
+MCPize platform auto-bridges stdio to HTTP for cloud deployment).
 
 Tools:
   analyze_transcript — Full pipeline over a transcript string (mock providers by default)

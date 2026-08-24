@@ -186,7 +186,7 @@ mcpize analyze && mcpize doctor && mcpize deploy
 Local stdio:
 
 ```bash
-pip install -r mcp-server/requirements.txt
+pip install -r requirements.txt
 python mcp-server/server.py
 ```
 

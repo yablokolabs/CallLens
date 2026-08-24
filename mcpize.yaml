@@ -4,10 +4,10 @@ description: >-
   Open-source conversation intelligence and behavioral evaluation powered by
   LangGraph. Transcribe, diarize, measure, and score conversations against
   declarative rubrics with timestamped evidence — all through MCP tools.
-runtime: container
-build:
-  dockerfile: Dockerfile.mcp
+runtime: python
 entry: mcp-server/server.py
+build:
+  install: pip install -r requirements.txt
 startCommand:
   type: stdio
   command: python

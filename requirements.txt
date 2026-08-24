@@ -1,0 +1,3 @@
+# Root-level requirements for the MCPize Python runtime (and MCP server).
+# Installs the calllens package plus everything the stdio MCP server imports.
+-e .[mcp]
