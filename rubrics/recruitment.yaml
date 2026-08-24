@@ -1,0 +1,23 @@
+name: recruitment
+version: "1.0"
+description: >-
+  Evaluates recruitment interviews: structured questioning, evidence-based
+  assessment, candidate experience, and legal hygiene.
+
+dimensions:
+  structure:
+    label: Structured Interviewing
+    weight: 0.25
+    description: Uses consistent, job-relevant structured questions.
+  evidence:
+    label: Evidence-Based Assessment
+    weight: 0.25
+    description: Probes for concrete examples (STAR) rather than generalities.
+  experience:
+    label: Candidate Experience
+    weight: 0.25
+    description: Treats the candidate with respect and communicates clearly.
+  compliance:
+    label: Compliance Hygiene
+    weight: 0.25
+    description: Avoids prohibited questions and documents decisions fairly.

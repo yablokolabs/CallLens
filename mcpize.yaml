@@ -1,0 +1,14 @@
+version: 1
+name: calllens
+description: >-
+  Open-source conversation intelligence and behavioral evaluation powered by
+  LangGraph. Transcribe, diarize, measure, and score conversations against
+  declarative rubrics with timestamped evidence — all through MCP tools.
+runtime: container
+build:
+  dockerfile: Dockerfile.mcp
+entry: mcp-server/server.py
+startCommand:
+  type: stdio
+  command: python
+  args: ["mcp-server/server.py"]

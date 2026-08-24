@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+      - name: mypy
+        run: mypy packages/calllens/src tests
+
+      - name: pytest
+        run: pytest -q
+
+      - name: Docker build (backend)
+        run: docker build -f Dockerfile.backend -t calllens-backend .
+
+      - name: Docker build (mcp)
+        run: docker build -f Dockerfile.mcp -t calllens-mcp .
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+  # Ensures the repo is free of committed secrets.
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail on secret patterns
+        run: |
+          ! grep -rniE "sk-[a-zA-Z0-9]{20,}|ELEVENLABS_API_KEY=.+[A-Za-z0-9]" --include="*.py" --include="*.ts" --include="*.tsx" --include="*.md" --include="*.json" --include="*.yaml" . || exit 1

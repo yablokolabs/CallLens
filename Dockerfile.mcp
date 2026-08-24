@@ -1,0 +1,23 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# System deps for audio/ML-native wheels if needed later
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Core package
+COPY packages/calllens/src/ packages/calllens/src/
+COPY rubrics/ rubrics/
+COPY pyproject.toml .
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir "fastmcp>=2.0" "pydantic>=2" "pyyaml>=6" "typer>=0.12" \
+    && pip install --no-cache-dir -e . --no-deps
+
+# MCP server
+COPY mcp-server/ mcp-server/
+
+EXPOSE 8080
+
+CMD ["python", "mcp-server/server.py"]

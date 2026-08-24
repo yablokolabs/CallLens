@@ -1,0 +1,67 @@
+name: consultative_sales
+version: "1.0"
+description: >-
+  Evaluates consultative selling behavior: rapport, credentialization,
+  ecosystem positioning, discovery, adaptability, cross-sell, upsell,
+  customer energy, and budget alignment.
+
+dimensions:
+  rapport:
+    label: Rapport
+    weight: 0.08
+    description: >
+      Determine whether the representative builds authentic rapport with
+      the customer.
+  credentialization:
+    label: Company Credentialization
+    weight: 0.08
+    description: >
+      Determine whether the representative credibly positions the company's
+      credentials, track record, and relevance.
+  ecosystem:
+    label: Ecosystem Positioning
+    weight: 0.08
+    description: >
+      Determine whether the representative presents the company as part of
+      a broader ecosystem of products and partners.
+  discovery:
+    label: Problem Discovery
+    weight: 0.16
+    description: >
+      Determine whether the representative questions the client about the
+      problems they are trying to solve and explores business impact.
+  adaptability:
+    label: Consultative Adaptability
+    weight: 0.16
+    description: >
+      Determine whether the representative adjusts the call to properly
+      match client needs and signals.
+  adjacent_cross_sell:
+    label: Adjacent Cross Sell
+    weight: 0.09
+    description: >
+      Determine whether the representative cross-sells adjacent products.
+  future_cross_sell:
+    label: Future Opportunity Cross Sell
+    weight: 0.08
+    description: >
+      Determine whether the representative positions future solutions and
+      follow-on opportunities.
+  upsell:
+    label: Upsell
+    weight: 0.08
+    description: >
+      Determine whether the representative upsells different verticals,
+      services, and higher engagement types.
+  customer_energy:
+    label: Customer Energy
+    weight: 0.08
+    description: >
+      Determine whether the representative energizes the client and keeps
+      them engaged.
+  budget_alignment:
+    label: Budget Alignment
+    weight: 0.11
+    description: >
+      Determine whether the representative finds opportunities that fit the
+      client's budget.

@@ -1,0 +1,11 @@
+00:00 REP: Hi Sarah, thanks for taking the time to chat today.
+00:05 CUSTOMER: Thanks for having me.
+00:10 REP: I'd love to understand what's driving you to look at this now. What is the biggest operational bottleneck your team is dealing with?
+00:22 CUSTOMER: Our order fulfillment keeps missing SLA targets, and it's hurting renewals.
+00:30 REP: How much impact is that having on revenue?
+00:35 CUSTOMER: We lost two enterprise accounts last quarter because of it.
+00:42 REP: That sounds serious. Our platform automates the fulfillment pipeline end to end, and it integrates with your existing CRM and analytics stack.
+00:56 CUSTOMER: Interesting. What does it cost?
+01:00 REP: Pricing starts at two thousand a month and scales with volume, so it can fit a pilot budget.
+01:10 CUSTOMER: That could work for us this quarter.
+01:15 REP: Let's schedule a pilot for next week then.

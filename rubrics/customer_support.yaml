@@ -1,0 +1,27 @@
+name: customer_support
+version: "1.0"
+description: >-
+  Evaluates customer support conversations: empathy, issue diagnosis,
+  resolution, ownership, and follow-through.
+
+dimensions:
+  empathy:
+    label: Empathy
+    weight: 0.20
+    description: Acknowledges the customer's situation and emotional state.
+  diagnosis:
+    label: Issue Diagnosis
+    weight: 0.25
+    description: Asks clarifying questions to identify the root cause.
+  resolution:
+    label: Resolution Quality
+    weight: 0.25
+    description: Provides a clear, accurate, actionable resolution.
+  ownership:
+    label: Ownership
+    weight: 0.15
+    description: Takes responsibility and drives the issue to closure.
+  follow_through:
+    label: Follow-Through
+    weight: 0.15
+    description: Sets expectations for next steps and follows up.
