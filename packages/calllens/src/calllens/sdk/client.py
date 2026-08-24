@@ -5,7 +5,7 @@ from calllens import CallLens
 
 client = CallLens(base_url="http://localhost:8000")
 call = await client.calls.upload("sales-call.mp3")
-result = await call.analyze(rubric="consultative-sales")
+result = await call.analyze(rubric="consultative_sales")
 print(result.overall_score)
 ```
 """

@@ -118,6 +118,34 @@ async def test_audio_ingestion_runs_transcribe(settings, rubric, mock_llm, trans
     assert state["transcript"].source == "mock"
 
 
+@pytest.mark.asyncio
+async def test_bare_mock_llm_binds_handlers_after_transcription(
+    settings, rubric, transcript
+):
+    """CLI-style flow: audio in, bare mock LLM (no pre-wired handlers).
+
+    Handlers must be bound to the transcript produced by transcription, not
+    the empty pre-transcription state — otherwise coaching/evidence crash
+    (regression: list index out of range) or reference nothing.
+    """
+    from calllens.providers.speech.mock import MockSpeechProvider
+
+    speech = MockSpeechProvider(transcript)
+    bare_llm = MockLLMProvider()
+    graph = AnalysisGraph(speech=speech, llm=bare_llm, settings=settings, rubric=rubric)
+    state = await graph.run({"call_id": "audio-bare", "audio": b"fake-audio", "rubric": rubric})
+    report = state["final_report"]
+    assert report is not None
+    assert state["status"].value == "COMPLETED"
+    # Coaching and evidence must carry the transcribed transcript's timestamps.
+    assert report.coaching
+    first_rep = next(u for u in transcript.utterances if u.speaker_id == "rep")
+    assert report.coaching[0].evidence_timestamps == [first_rep.start_time]
+    evidence = [e for s in report.rubric_scores for e in s.result.positive_evidence]
+    assert evidence
+    assert evidence[0].start_time == first_rep.start_time
+
+
 def test_mock_llm_reused_across_graph_nodes(mock_llm):
     """The same provider instance must serve all nodes (deterministic)."""
     assert isinstance(mock_llm, MockLLMProvider)

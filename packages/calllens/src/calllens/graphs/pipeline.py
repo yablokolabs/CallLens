@@ -86,6 +86,10 @@ class AnalysisGraph:
         transcript = state.get("transcript")
         if transcript is None:
             return {}
+        # Mock handlers are transcript-aware; bind them only once the real
+        # transcript exists (transcription runs inside the graph, so binding
+        # at run() time would see an empty transcript for audio inputs).
+        self._ensure_mock_handlers(transcript)
         roles = transcript.speaker_roles()
         if not any(r != SpeakerRole.UNKNOWN for r in roles.values()):
             for idx, speaker in enumerate(transcript.speakers):
@@ -305,7 +309,6 @@ class AnalysisGraph:
 
     async def run(self, state: ConversationState) -> dict[str, Any]:
         """Execute the pipeline and return the final state."""
-        self._ensure_mock_handlers(state.get("transcript"))
         rubric = state.get("rubric")
         initial = dict(state)
         initial.setdefault("call_id", str(uuid.uuid4()))

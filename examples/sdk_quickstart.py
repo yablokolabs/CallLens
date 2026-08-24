@@ -14,7 +14,7 @@ async def main() -> None:
         call = await client.calls.upload("sales-call.mp3", filename="sales-call.mp3")
 
         # 2. Kick off analysis against a rubric
-        await call.analyze(rubric="consultative-sales")
+        await call.analyze(rubric="consultative_sales")
 
         # 3. Fetch the evidence-backed report
         report = await call.report()

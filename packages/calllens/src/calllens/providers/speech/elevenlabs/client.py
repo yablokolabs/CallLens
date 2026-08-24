@@ -20,6 +20,12 @@ class ElevenLabsNotConfigured(ElevenLabsError):
 
 
 @lru_cache
+def _client_for_key(api_key: str) -> object:
+    from elevenlabs import ElevenLabs as SDKClient
+
+    return SDKClient(api_key=api_key)
+
+
 def get_elevenlabs_client(settings: Settings | None = None) -> object:
     """Return a configured ElevenLabs client or raise if no API key is set."""
     settings = settings or get_settings()
@@ -27,6 +33,6 @@ def get_elevenlabs_client(settings: Settings | None = None) -> object:
         raise ElevenLabsNotConfigured(
             "ELEVENLABS_API_KEY is not set; configure it in the environment (.env)"
         )
-    from elevenlabs import ElevenLabs as SDKClient
-
-    return SDKClient(api_key=settings.elevenlabs_api_key)
+    # Cache keyed on the API key (Settings is unhashable, so it cannot be
+    # passed directly to lru_cache).
+    return _client_for_key(settings.elevenlabs_api_key)

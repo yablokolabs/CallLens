@@ -2,7 +2,20 @@
 
 from __future__ import annotations
 
+from calllens.config import Settings
+from calllens.providers.speech.elevenlabs.client import get_elevenlabs_client
 from calllens.providers.speech.elevenlabs.stt import STTResult, _words_to_transcript
+
+
+def test_client_constructed_from_settings():
+    """Client construction accepts a Settings object (regression: Settings is
+    unhashable, so it cannot be passed directly to lru_cache)."""
+    settings = Settings(elevenlabs_api_key="test-key")
+    client = get_elevenlabs_client(settings)
+    assert client is not None
+    # Same key → same cached client; different key → different client.
+    assert get_elevenlabs_client(Settings(elevenlabs_api_key="test-key")) is client
+    assert get_elevenlabs_client(Settings(elevenlabs_api_key="other-key")) is not client
 
 
 def _words():

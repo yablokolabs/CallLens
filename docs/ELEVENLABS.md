@@ -10,7 +10,7 @@ This document reflects the ElevenLabs Python SDK as installed at development tim
 | --- | --- | --- |
 | `ELEVENLABS_API_KEY` | — | from environment only |
 | `ELEVENLABS_STT_MODEL` | `scribe_v2` | current recommended STT model (`scribe_v1` also accepted) |
-| `ELEVENLABS_TTS_MODEL` | `eleven_multilingual_v3` | spoken coaching |
+| `ELEVENLABS_TTS_MODEL` | `eleven_multilingual_v2` | spoken coaching (v3 requires account access; v2 is universally available) |
 | `ELEVENLABS_TTS_VOICE_ID` | — | configured voice |
 
 ## Speech-to-text

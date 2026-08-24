@@ -245,13 +245,14 @@ def default_mock_handlers(transcript: Transcript) -> dict[type[BaseModel], Handl
 
     def _coaching(prompt: str, schema: type[BaseModel]) -> BaseModel:
         ts = [u.start_time for u in reps[:1]]
+        timestamp = ts[0] if ts else 0.0
         return CoachingOutput(
             recommendations=[
                 {
                     "title": "Establish business impact before positioning",
                     "priority": "high",
                     "recommendation": (
-                        f"At {ts[0]:.0f}s you moved into the demo without "
+                        f"At {timestamp:.0f}s you moved into the demo without "
                         f"quantifying the customer's revenue impact."
                     ),
                     "rationale": "Impact quantification strengthens urgency and budget alignment.",

@@ -101,7 +101,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 
 ```bash
 calllens analyze call.mp3
-calllens analyze call.mp3 --rubric consultative-sales --output report.json
+calllens analyze call.mp3 --rubric consultative_sales --output report.json
 calllens rubric list
 calllens rubric validate ./my_rubric.yaml
 calllens eval run
@@ -118,7 +118,7 @@ from calllens import CallLens
 async def main():
     async with CallLens(base_url="http://localhost:8000") as client:
         call = await client.calls.upload("sales-call.mp3")
-        await call.analyze(rubric="consultative-sales")
+        await call.analyze(rubric="consultative_sales")
         report = await call.report()
         print(report["overall_score"], report["confidence"])
 
@@ -170,10 +170,48 @@ Dimension weights must sum to `1.0`. See [rubrics/](rubrics/) and [docs/custom-r
 | Speech (STT/TTS) | ElevenLabs Scribe v2 | `ELEVENLABS_API_KEY`, `ELEVENLABS_STT_MODEL` |
 | Reasoning LLM | OpenAI | `LLM_PROVIDER=openai`, `OPENAI_API_KEY`, `LLM_MODEL` |
 | Reasoning LLM | Anthropic | `LLM_PROVIDER=anthropic`, `ANTHROPIC_API_KEY`, `LLM_MODEL` |
-| Reasoning LLM | Any OpenAI-compatible endpoint | `LLM_PROVIDER=compatible`, `COMPATIBLE_BASE_URL` |
+| Reasoning LLM | Any OpenAI-compatible endpoint | `LLM_PROVIDER=compatible`, `COMPATIBLE_BASE_URL`, `COMPATIBLE_API_KEY` |
 | Reasoning LLM | Offline mock (default) | `LLM_PROVIDER=mock` |
 
 All tests and CI run against mocks — no paid API calls.
+
+### Example: live analysis with real providers
+
+Wire both providers in `.env` and analyze an actual recording:
+
+```bash
+# .env — speech + reasoning
+ELEVENLABS_API_KEY=sk_...
+ELEVENLABS_STT_MODEL=scribe_v2
+
+# Any OpenAI-compatible endpoint, e.g. Melious (https://api.melious.ai/v1)
+LLM_PROVIDER=compatible
+COMPATIBLE_BASE_URL=https://api.melious.ai/v1
+COMPATIBLE_API_KEY=sk-mel-...
+LLM_MODEL=gpt-oss-120b
+```
+
+Then run the full pipeline on a recording — it must be a pre-recorded call file
+(MP3/WAV), but you can synthesize one if you don't have a recording handy:
+
+```bash
+# Option A — you have a recording: transcribe + analyze it live
+# (Scribe v2 STT → metrics → evidence-backed scoring → coaching)
+calllens analyze call.mp3 --rubric consultative_sales --output report.json
+
+# Option B — no recording? Synthesize a two-speaker sample call with ElevenLabs TTS
+python examples/generate_sample_call.py   # → sample_call.mp3
+calllens analyze sample_call.mp3 --rubric consultative_sales --output report.json
+
+# Both write the evidence-backed report (scores + timestamped evidence + coaching)
+# to report.json; omit --output to print it to stdout.
+```
+
+> The `compatible` endpoint must support OpenAI JSON-schema structured outputs
+> (`response_format: {type: "json_schema"}`) — the pipeline's `structured_completion`
+> depends on it. Not every model on every gateway does; e.g. `gpt-oss-120b` on
+> Melious works, while several others (GLM, Kimi, DeepSeek v4 on Melious) reject
+> schema mode. Probe with a small structured call before committing to a model.
 
 ## MCP / MCPize
 

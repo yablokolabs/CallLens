@@ -2,7 +2,7 @@
 
 ```bash
 calllens analyze call.mp3
-calllens analyze call.mp3 --rubric consultative-sales
+calllens analyze call.mp3 --rubric consultative_sales
 calllens rubric list
 calllens rubric validate ./rubric.yaml
 calllens eval run

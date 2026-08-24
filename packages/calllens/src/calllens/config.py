@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # ── Speech provider ──────────────────────────────────────────────
     elevenlabs_api_key: str | None = None
     elevenlabs_stt_model: str = "scribe_v2"
-    elevenlabs_tts_model: str = "eleven_multilingual_v3"
+    elevenlabs_tts_model: str = "eleven_multilingual_v2"
     elevenlabs_tts_voice_id: str = "JBFqnCBsd6RMkjVDRZzb"
 
     # ── Reasoning LLM provider ───────────────────────────────────────

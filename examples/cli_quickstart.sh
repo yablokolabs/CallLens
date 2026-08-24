@@ -9,7 +9,7 @@ calllens rubric list
 calllens rubric validate rubrics/consultative_sales.yaml
 
 # 3. Analyze a text transcript, write the JSON report
-calllens analyze examples/sample_call.txt --rubric consultative-sales --output /tmp/calllens-report.json
+calllens analyze examples/sample_call.txt --rubric consultative_sales --output /tmp/calllens-report.json
 
 # 4. Run the evaluation harness over the synthetic dataset
 calllens eval run

@@ -16,7 +16,7 @@ from calllens import CallLens
 async def main():
     async with CallLens(base_url="http://localhost:8000") as client:
         call = await client.calls.upload("call.mp3")
-        await call.analyze(rubric="consultative-sales")
+        await call.analyze(rubric="consultative_sales")
         report = await call.report()
         print(report["overall_score"])
 
