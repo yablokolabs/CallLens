@@ -17,7 +17,9 @@ flowchart LR
     W --> RDS
     W --> S3
     W --> SSM[Secrets Manager]
-    ALL --> CW[CloudWatch]
+    API --> CW[CloudWatch]
+    WEB --> CW
+    W --> CW
 ```
 
 ## Components

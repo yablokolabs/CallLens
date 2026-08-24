@@ -2,39 +2,29 @@
 
 CallLens turns raw conversations into **structured, evidence-backed behavioral intelligence**. The pipeline is orchestrated by LangGraph, keeps deterministic computation separate from semantic reasoning, and isolates every external provider behind a protocol.
 
-```
-Audio / Video / Transcript
-          │
-          ▼
-       Ingestion
-          │
-          ▼
- ElevenLabs Speech-to-Text
-   + Speaker Diarization
-   + Timestamps
-          │
-          ▼
- Transcript Normalization
-          │
-          ▼
-       LangGraph
-          │
- ┌────────┼────────────┐
- ▼        ▼            ▼
-Metrics  Semantic     Rubric
-         Analysis     Scoring
- │        │            │
- └────────┼────────────┘
-          ▼
- Evidence Verification
-          ▼
- Confidence / Re-scoring
-          ▼
- Conversation Intelligence
-          │
- ┌────────┼───────────────┐
- ▼        ▼               ▼
-REST    MCP/GraphQL   Next.js UI
+```mermaid
+flowchart TD
+    SRC[Audio / Video / Transcript] --> ING[Ingestion]
+    ING --> ELEVEN[ElevenLabs Speech-to-Text
+                   + Speaker Diarization
+                   + Timestamps]
+    ELEVEN --> NORM[Transcript Normalization]
+
+    subgraph LG[LangGraph Orchestration]
+        NORM --> MET[Deterministic Metrics]
+        NORM --> SEM[Semantic Analysis]
+        NORM --> RUB[Rubric Scoring]
+        MET --> EV[Evidence Verification]
+        SEM --> EV
+        RUB --> EV
+        EV --> CONF[Confidence / Re-scoring]
+        CONF -->|sufficient| CI[Conversation Intelligence]
+        CONF -->|insufficient| RUB
+    end
+
+    CI --> REST[REST API]
+    CI --> MCP[MCP / GraphQL]
+    CI --> WEB[Next.js UI]
 ```
 
 ## Design principles
