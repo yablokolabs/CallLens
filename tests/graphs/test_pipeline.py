@@ -119,9 +119,7 @@ async def test_audio_ingestion_runs_transcribe(settings, rubric, mock_llm, trans
 
 
 @pytest.mark.asyncio
-async def test_bare_mock_llm_binds_handlers_after_transcription(
-    settings, rubric, transcript
-):
+async def test_bare_mock_llm_binds_handlers_after_transcription(settings, rubric, transcript):
     """CLI-style flow: audio in, bare mock LLM (no pre-wired handlers).
 
     Handlers must be bound to the transcript produced by transcription, not

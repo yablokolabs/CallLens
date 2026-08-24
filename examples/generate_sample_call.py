@@ -60,7 +60,7 @@ def _pick_voices(client) -> tuple[object, object]:
         raise SystemExit(f"need at least 2 voices, got {len(voices)}")
     by_gender: dict[str, object] = {}
     for v in voices:
-        label = (getattr(v, "labels", None) or {})
+        label = getattr(v, "labels", None) or {}
         gender = (label.get("gender") or "").lower()
         if gender in ("male", "female") and gender not in by_gender:
             by_gender[gender] = v
