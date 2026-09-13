@@ -136,6 +136,19 @@ async def coach_analyze(request: Request, body: AnalyzeBody) -> dict:
     }
 
 
+@router.post("/reset")
+async def coach_reset(request: Request) -> dict:
+    """Clear all seeded Coach decisions/history so the demo can start afresh.
+
+    State is in-memory: after reset, mock providers auto-reseed on the next
+    GET while live providers wait for Load Demo Calls (POST /seed).
+    """
+    svc = get_coach_service(_app(request).settings)
+    svc.clear()
+    # No summary() here — for mock it would auto-reseed inside this request.
+    return {"reset": True}
+
+
 @router.post("/seed")
 async def coach_seed(request: Request) -> dict:
     """Seed DEMO_MODE data. For live providers seeds in background so /docs stays live."""

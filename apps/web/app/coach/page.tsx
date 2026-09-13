@@ -134,6 +134,21 @@ export default function CoachPage() {
     }
   };
 
+  const handleReset = async () => {
+    setSeeding(true);
+    try {
+      await api.coachReset();
+      setSelectedId(null);
+      setDetail(null);
+      setAnalyzeResult(null);
+      await load();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   const handleAnalyze = async () => {
     if (!analyzeTranscript.trim()) return;
     setAnalyzeLoading(true);
@@ -178,6 +193,13 @@ export default function CoachPage() {
             {seeding ? "Seeding live calls…" : "Load Demo Calls"}
           </button>
           {seeding ? <span className="text-xs text-zinc-500">Live Sarvam — 3 agent runs in parallel, ~15-30s</span> : null}
+          <button
+            onClick={handleReset}
+            disabled={seeding}
+            className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-zinc-300 transition hover:bg-zinc-800 disabled:opacity-50"
+          >
+            Reset
+          </button>
           <a
             href={`${api.baseUrl}/docs`}
             target="_blank"

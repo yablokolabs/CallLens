@@ -132,3 +132,15 @@ def test_coach_get_404(client):
 def test_coach_analyze_rejects_empty(client):
     resp = client.post("/api/coach/analyze", json={"transcript": "   "})
     assert resp.status_code == 400
+
+
+def test_coach_reset_clears_state(client):
+    """Reset wipes seeded decisions; mock provider reseeds on next GET."""
+    # Seed first
+    assert client.get("/api/coach/summary").json()["total"] == 18
+    # Reset — clean ack (no auto-reseed inside this response)
+    resp = client.post("/api/coach/reset")
+    assert resp.status_code == 200
+    assert resp.json() == {"reset": True}
+    # Mock provider auto-reseeds on next GET
+    assert client.get("/api/coach/summary").json()["total"] == 18

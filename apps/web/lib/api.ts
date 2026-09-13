@@ -83,6 +83,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+  coachReset: () =>
+    request<{ reset: boolean; summary: { total: number; by_decision: Record<string, number> } }>(`/api/coach/reset`, { method: "POST" }),
   coachSeed: () =>
     request<{
       seeded: number;
