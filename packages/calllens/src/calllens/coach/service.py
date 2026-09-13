@@ -296,12 +296,38 @@ class CoachService:
 
     def get_decision(self, call_id: str) -> CoachDecision | None:
         self.ensure_seed()
+        if call_id not in self._decisions and not self._decisions:
+            # Lazy seed for live-model DEMO_MODE (avoids startup hang).
+            import contextlib as _ctx_lazy
+
+            with _ctx_lazy.suppress(Exception):
+                self.seed_demo()
         return self._decisions.get(call_id)
 
     def get_report(self, call_id: str) -> CallReport | None:
         return self._reports.get(call_id)
 
     def summary(self) -> dict:
+        # Never block /summary on a full Sarvam seed — defer until /calls or /seed.
+        # The frontend handles empty -> Load Demo Calls.
+        try:
+            provider = (
+                self.settings.coach_model_provider
+                or self.settings.model_provider
+                or self.settings.llm_provider
+                or "mock"
+            ).lower()
+            if provider not in ("mock", "") and not self._decisions:
+                self.ensure_seed()
+                return {
+                    "total": 0,
+                    "by_decision": {"NO_ACTION": 0, "COACH": 0, "ESCALATE": 0},
+                    "today_label": "TODAY",
+                    "demo_seeded": False,
+                    "seed_pending": True,
+                }
+        except Exception:
+            pass
         decs = self.list_decisions()
         by_decision = {"NO_ACTION": 0, "COACH": 0, "ESCALATE": 0}
         for d in decs:
@@ -314,6 +340,7 @@ class CoachService:
         }
 
     def rep_history(self, rep_id: str) -> dict:
+        # Don't force a full Sarvam seed for a single rep history fetch.
         self.ensure_seed()
         return self.history_store.summary(rep_id).model_dump(mode="json")
 
@@ -330,10 +357,20 @@ def get_coach_service(settings: Settings | None = None) -> CoachService:
     global _coach_service
     if _coach_service is None:
         _coach_service = CoachService(settings=settings or get_settings())
-        # If settings DEMO_MODE, pre-seed eagerly (so /api/coach/summary works immediately)
+        # Eager DEMO_MODE seeding is only safe for the deterministic mock.
+        # With a live model (e.g. Sarvam) seeding 18 calls synchronously inside
+        # get_coach_service() blocks the event loop at import time and hangs
+        # /health as well, so defer seeding to the first coach request.
         try:
             if _coach_service.settings.demo_mode:
-                _coach_service.seed_demo()
+                provider = (
+                    _coach_service.settings.coach_model_provider
+                    or _coach_service.settings.model_provider
+                    or _coach_service.settings.llm_provider
+                    or "mock"
+                ).lower()
+                if provider in ("mock", ""):
+                    _coach_service.seed_demo()
         except Exception:
             pass
     return _coach_service

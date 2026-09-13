@@ -19,12 +19,28 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql+asyncpg://calllens:calllens@db:5432/calllens
       LLM_PROVIDER: ${LLM_PROVIDER:-mock}
-      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+      COMPATIBLE_BASE_URL: ${COMPATIBLE_BASE_URL:-}
+      COMPATIBLE_API_KEY: ${COMPATIBLE_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
+      SARVAM_API_KEY: ${SARVAM_API_KEY:-}
+      SARVAM_MODEL_ID: ${SARVAM_MODEL_ID:-sarvam-105b}
+      SARVAM_BASE_URL: ${SARVAM_BASE_URL:-https://api.sarvam.ai/v1}
+      COACH_MODEL_PROVIDER: ${COACH_MODEL_PROVIDER:-}
+      COACH_MODEL_ID: ${COACH_MODEL_ID:-}
+      MODEL_PROVIDER: ${MODEL_PROVIDER:-}
+      AWS_REGION: ${AWS_REGION:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      BEDROCK_MODEL_ID: ${BEDROCK_MODEL_ID:-}
+      DEMO_MODE: ${DEMO_MODE:-false}
       CALLS_ANALYZE_SYNC: "false"
     ports:
       - "8000:8000"

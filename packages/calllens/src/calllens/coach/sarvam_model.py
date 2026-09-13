@@ -59,7 +59,9 @@ class SarvamModel(OpenAIModel):
         mid = model_id or _SARVAM_MODEL
         base = base_url or _SARVAM_BASE
         # Default params: disable reasoning by default, generous max_tokens
-        default_params: dict[str, Any] = {"max_tokens": 1200}
+        # Must be large enough for tool calls + structured CoachDecision (incl. evidence).
+        # 1200 was truncating record_agent_decision / CoachDecision (see api logs).
+        default_params: dict[str, Any] = {"max_tokens": 3500}
         # Sarvam: reasoning_effort must be None to disable thinking
         # Pass via extra_body reasoning_effort=None — via params extra_body
         # But OpenAI client supports extra_body via request extras; we set via params
