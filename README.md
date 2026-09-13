@@ -394,6 +394,43 @@ In demo mode synthetic calls are seeded and the three scenarios are available in
 | **B — coaching needed** | `COACH` | Rep dominates, misses discovery, jumps to solution — with evidence |
 | **C — escalation** | `ESCALATE` | Serious dissatisfaction / churn signal — manager review required |
 
+### Live Coach with Sarvam (optional, real LLM)
+
+Deterministic `mock` is recommended for recording (stable, offline). For a live `Sarvam → Strands → tools → CoachDecision` demo the same 3 synthetic calls run through the real model — Strands owns the loop, deterministic `decide()` is only guardrail/fallback:
+
+```env
+# .env — keep DEMO_MODE=true so the same 3 synthetic calls are used
+DEMO_MODE=true
+SARVAM_API_KEY=sk_...
+SARVAM_MODEL_ID=sarvam-105b
+SARVAM_BASE_URL=https://api.sarvam.ai/v1
+COACH_MODEL_PROVIDER=sarvam
+COACH_MODEL_ID=sarvam-105b
+```
+
+```bash
+docker compose up --build -d
+# or local (no Docker)
+# pip install -e ".[dev]"
+# DEMO_MODE=true COACH_MODEL_PROVIDER=sarvam uvicorn calllens.api:create_app --factory --host 0.0.0.0 --port 8000
+```
+
+Verify the loop is live (tool traces, no fallback):
+
+```bash
+curl -s http://localhost:8000/api/coach/summary | jq .
+curl -s http://localhost:8000/api/coach/calls | jq '.[0:3] | .[] | {call_id, decision, confidence, model_provider}'
+curl -s http://localhost:8000/api/coach/calls/demo-sarah-acme | jq '{decision, confidence, model_provider, human_review_required, evidence, trace}'
+```
+
+Expected (live-tested via `packages/calllens/src/calllens/coach/sarvam_model.py` → `SarvamModel(OpenAIModel)` stringifies content for Sarvam's string-only `/v1/chat/completions`):
+
+- `healthy → NO_ACTION` · conf ~0.89 · `record_agent_decision` · `human_review_required=false` · `Strands requested check_escalation_signals / get_call_evidence / get_rep_history`
+- `coaching → COACH` · conf ~0.82 · `create_coaching_action` · evidence at `00:00` · `discovery_issue 4/5`
+- `escalation → ESCALATE` · conf ~0.94 · `escalate_to_manager` · `human_review_required=true`
+
+Each shows `model_provider: "sarvam"`, a real Strands tool trace (not a static list), and `Fallback used: NO`. See `SARVAM_API_KEY` in [`.env.example`](.env.example) and `packages/calllens/src/calllens/coach/sarvam_model.py`.
+
 ---
 
 ## Demo Walkthrough (60-second judge path)
@@ -473,7 +510,7 @@ All three decisions, evidence, metrics, rubric labels and `human_review_required
 - Daniel's evidence panel (the richest EXPLAINABLE-AI proof).
 - Maya's red escalation banner (the human-in-the-loop proof).
 
-If the stack doesn't come up, `docker compose logs api web` is enough — the stack runs fully on `LLM_PROVIDER=mock`, no ElevenLabs/Bedrock keys required, and the demo seed is deterministic so recording never flakes.
+If the stack doesn't come up, `docker compose logs api web` is enough — the stack runs fully on `LLM_PROVIDER=mock`, no ElevenLabs/Bedrock/Sarvam keys required, and the demo seed is deterministic so recording never flakes. For live judging add `COACH_MODEL_PROVIDER=sarvam` as shown in **Live Coach with Sarvam** above.
 
 ---
 
