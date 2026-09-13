@@ -67,6 +67,8 @@ class CoachService:
     _decisions: dict[str, CoachDecision] = field(default_factory=dict)
     _reports: dict[str, CallReport] = field(default_factory=dict)
     _seeded: bool = False
+    _seeding: bool = False
+    _seed_error: str | None = None
 
     def _agent(self):
         from calllens.coach.agent import CoachAgent
@@ -328,6 +330,24 @@ class CoachService:
             ).lower()
             if provider not in ("mock", "") and not self._decisions:
                 self.ensure_seed()
+                if self._seeding:
+                    return {
+                        "total": 0,
+                        "by_decision": {"NO_ACTION": 0, "COACH": 0, "ESCALATE": 0},
+                        "today_label": "TODAY",
+                        "demo_seeded": False,
+                        "seed_pending": True,
+                        "seeding": True,
+                    }
+                if self._seed_error:
+                    return {
+                        "total": 0,
+                        "by_decision": {"NO_ACTION": 0, "COACH": 0, "ESCALATE": 0},
+                        "today_label": "TODAY",
+                        "demo_seeded": False,
+                        "seed_pending": True,
+                        "seed_error": self._seed_error,
+                    }
                 return {
                     "total": 0,
                     "by_decision": {"NO_ACTION": 0, "COACH": 0, "ESCALATE": 0},
@@ -337,16 +357,30 @@ class CoachService:
                 }
         except Exception:
             pass
+        if self._seeding and not self._decisions:
+            return {
+                "total": 0,
+                "by_decision": {"NO_ACTION": 0, "COACH": 0, "ESCALATE": 0},
+                "today_label": "TODAY",
+                "demo_seeded": False,
+                "seed_pending": True,
+                "seeding": True,
+            }
         decs = self.list_decisions()
         by_decision = {"NO_ACTION": 0, "COACH": 0, "ESCALATE": 0}
         for d in decs:
             by_decision[d.decision.value] += 1
-        return {
+        out: dict = {
             "total": len(decs),
             "by_decision": by_decision,
             "today_label": "TODAY",
             "demo_seeded": self._seeded,
         }
+        if self._seeding:
+            out["seeding"] = True
+        if self._seed_error:
+            out["seed_error"] = self._seed_error
+        return out
 
     def rep_history(self, rep_id: str) -> dict:
         # Don't force a full Sarvam seed for a single rep history fetch.
@@ -357,6 +391,8 @@ class CoachService:
         self._decisions.clear()
         self._reports.clear()
         self.history_store.clear()
+        self._seeding = False
+        self._seed_error = None
 
 
 _coach_service: CoachService | None = None

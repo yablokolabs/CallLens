@@ -46,7 +46,16 @@ export const api = {
   runEval: (payload: unknown) => request<{ overall_mae: number; runs: unknown[] }>("/api/v1/evals/run", { method: "POST", body: JSON.stringify(payload) }),
 
   // Coach (Strands agent — NO_ACTION / COACH / ESCALATE)
-  coachSummary: () => request<{ total: number; by_decision: Record<string, number>; today_label: string; demo_seeded: boolean }>("/api/coach/summary"),
+  coachSummary: () =>
+    request<{
+      total: number;
+      by_decision: Record<string, number>;
+      today_label: string;
+      demo_seeded: boolean;
+      seed_pending?: boolean;
+      seeding?: boolean;
+      seed_error?: string;
+    }>("/api/coach/summary"),
   coachCalls: () =>
     request<{ id: string; call_id: string; decision: string; confidence: number; summary: string; human_review_required: boolean; created_at: string | null }[]>("/api/coach/calls"),
   coachCall: (id: string) =>
@@ -75,7 +84,12 @@ export const api = {
       body: JSON.stringify(body),
     }),
   coachSeed: () =>
-    request<{ seeded: number; decisions: { call_id: string; decision: string; confidence: number }[]; summary: { total: number; by_decision: Record<string, number> } }>(`/api/coach/seed`, { method: "POST" }),
+    request<{
+      seeded: number;
+      decisions: { call_id: string; decision: string; confidence: number }[];
+      summary: { total: number; by_decision: Record<string, number> };
+      seeding?: boolean;
+    }>(`/api/coach/seed`, { method: "POST" }),
 };
 
 export function formatTimestamp(seconds: number): string {

@@ -8,6 +8,8 @@ Endpoints re-use CallLens analysis as the tool layer and add history + trace.
 
 from __future__ import annotations
 
+import threading
+
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
@@ -124,8 +126,34 @@ async def coach_analyze(request: Request, body: AnalyzeBody) -> dict:
 
 @router.post("/seed")
 async def coach_seed(request: Request) -> dict:
-    """Seed DEMO_MODE data (also auto-seeded on first GET). Idempotent."""
+    """Seed DEMO_MODE data. For live providers seeds in background so /docs stays live."""
     svc = get_coach_service(_app(request).settings)
+    try:
+        provider = (
+            svc.settings.coach_model_provider
+            or svc.settings.model_provider
+            or svc.settings.llm_provider
+            or "mock"
+        ).lower()
+        is_live = provider not in ("mock", "")
+    except Exception:
+        is_live = False
+    if is_live and not svc._decisions:  # type: ignore[attr-defined]
+        if getattr(svc, "_seeding", False):
+            return {"seeding": True, "seeded": 0, "decisions": [], "summary": svc.summary()}
+        svc._seed_error = None  # type: ignore[attr-defined]
+        svc._seeding = True  # type: ignore[attr-defined]
+
+        def _bg_seed() -> None:
+            try:
+                svc.seed_demo()
+            except Exception as e:
+                svc._seed_error = str(e)[:500]  # type: ignore[attr-defined]
+            finally:
+                svc._seeding = False  # type: ignore[attr-defined]
+
+        threading.Thread(target=_bg_seed, daemon=True).start()
+        return {"seeding": True, "seeded": 0, "decisions": [], "summary": svc.summary()}
     decisions = svc.seed_demo()
     return {
         "seeded": len(decisions),

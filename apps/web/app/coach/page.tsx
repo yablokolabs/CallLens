@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { Badge, Card, EmptyState, SectionTitle } from "@/components/ui";
 import { cx, pct, scoreColor } from "@/lib/utils";
 
-type Summary = { total: number; by_decision: Record<string, number>; today_label: string; demo_seeded: boolean };
+type Summary = { total: number; by_decision: Record<string, number>; today_label: string; demo_seeded: boolean; seed_pending?: boolean; seeding?: boolean; seed_error?: string };
 type CoachListItem = { id: string; call_id: string; decision: string; confidence: number; summary: string; human_review_required: boolean; created_at: string | null };
 type CoachDetail = {
   decision: string;
@@ -107,8 +107,25 @@ export default function CoachPage() {
   const handleSeed = async () => {
     setSeeding(true);
     try {
-      await api.coachSeed();
-      await load();
+      const res = await api.coachSeed();
+      if ((res as unknown as { seeding?: boolean }).seeding) {
+        // Live provider — seeds 18 Sarvam calls in background (~90s). Poll until done.
+        for (let i = 0; i < 45; i++) {
+          await new Promise((r) => setTimeout(r, 2000));
+          const [s, c] = await Promise.all([api.coachSummary(), api.coachCalls()]);
+          setSummary(s);
+          const order: Record<string, number> = { ESCALATE: 0, COACH: 1, NO_ACTION: 2 };
+          c.sort((a, b) => (order[a.decision] ?? 9) - (order[b.decision] ?? 9) || (a.call_id ?? "").localeCompare(b.call_id ?? ""));
+          setCalls(c);
+          if ((s as Summary).total > 0) break;
+          if ((s as Summary).seed_error) {
+            setError(`Seed failed: ${(s as Summary).seed_error}`);
+            break;
+          }
+        }
+      } else {
+        await load();
+      }
     } catch (e) {
       setError(String(e));
     } finally {
@@ -157,8 +174,9 @@ export default function CoachPage() {
             disabled={seeding}
             className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 disabled:opacity-50"
           >
-            {seeding ? "Seeding…" : "Load Demo Calls"}
+            {seeding ? "Seeding live calls…" : "Load Demo Calls"}
           </button>
+          {seeding ? <span className="text-xs text-zinc-500">Live Sarvam — ~60–90s for 18 calls, page stays responsive</span> : null}
           <a
             href={`${api.baseUrl}/docs`}
             target="_blank"
