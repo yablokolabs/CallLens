@@ -112,6 +112,26 @@ export default function CoachCallPage({ params }: { params: Promise<{ id: string
 
       <Card>
         <SectionTitle sub="No hidden chain-of-thought — only this trace">Agent activity</SectionTitle>
+        <div className="mb-3 flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Decision engine:</span>
+          <span className="rounded-full border border-indigo-900/40 bg-indigo-950/30 px-2 py-0.5 text-[10px] font-medium text-indigo-300">Strands Agents SDK</span>
+          <span className="text-[10px] text-zinc-600">· CallLens is the evidence layer</span>
+        </div>
+        {detail.trace.some((s) => s.step.includes("Strands requested")) ? (
+          <div className="mb-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Agent tools used</div>
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {detail.trace
+                .filter((s) => s.step.includes("Strands requested"))
+                .map((s) => s.step.replace("Strands requested ", ""))
+                .map((tool) => (
+                  <span key={tool} className="rounded-full border border-zinc-800 bg-zinc-900 px-2 py-0.5 font-mono text-[10px] text-zinc-300">
+                    {tool}
+                  </span>
+                ))}
+            </div>
+          </div>
+        ) : null}
         <ol className="space-y-2">
           {detail.trace.map((s, i) => (
             <li key={i} className="flex gap-3">

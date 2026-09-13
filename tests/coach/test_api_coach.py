@@ -69,7 +69,9 @@ def test_coach_list_and_get(client):
     assert len(detail["evidence"]) >= 1
     assert detail["recommended_action"] is not None
     assert detail["human_review_required"] is False
-    assert len(detail["trace"]) == 5
+    # Strands trace: check_escalation + evidence + history + action + Decision + Action
+    assert len(detail["trace"]) == 6
+    assert any("Strands requested" in s["step"] for s in detail["trace"])
     assert detail["history_context"] is not None
 
     esc = client.get("/api/coach/calls/demo-maya-contoso").json()

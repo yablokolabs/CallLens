@@ -150,12 +150,69 @@ CallLens pipeline: **Audio or transcript → ElevenLabs Scribe v2 (STT + diariza
 
 ---
 
+## How Strands Controls the Workflow
+
+CallLens provides the analysis/evidence layer. **Strands Agents SDK owns the autonomous Coach loop**: it invokes CallLens tools, gathers evidence/history, selects NO_ACTION / COACH / ESCALATE, and triggers the corresponding action.
+
+```text
+Call arrives
+   ↓
+Strands Coach Agent
+   ↓
+Agent calls CallLens tools
+ ├── check_escalation_signals (hard guardrail)
+ ├── get_call_evidence (timestamped rubric evidence)
+ ├── get_rep_history (5-call pattern, e.g. discovery 4/5)
+ └── get_available_rubrics / analyze_call
+   ↓
+Agent determines whether it has enough information
+   ↓
+Agent chooses: NO_ACTION · COACH · ESCALATE  (structured CoachDecision)
+   ↓
+validate_agent_decision + check_hard_escalation_rules (guardrails)
+   ↓
+Agent calls corresponding action tool
+ ├── record_agent_decision  (NO_ACTION — silence is correct)
+ ├── create_coaching_action (COACH — evidence + metric + rubric)
+ └── escalate_to_manager    (ESCALATE — human_review_required=true)
+   ↓
+CoachDecision returned (explainable, with trace)
+```
+
+Example tool traces — the activity shown in `/coach` is the real Strands execution, not a static list:
+
+```text
+# Healthy → NO_ACTION (doing nothing is correct)
+✓ Strands requested check_escalation_signals  — check_escalation_signals completed
+✓ Strands requested get_call_evidence        — get_call_evidence completed
+✓ Strands requested get_rep_history          — Previous 5 calls: …
+✓ Strands requested record_agent_decision    — record_agent_decision executed
+⚑ Decision: No material issue — silence is correct
+
+# Repeated weakness → COACH
+✓ Strands requested check_escalation_signals
+✓ Strands requested get_call_evidence
+✓ Strands requested get_rep_history          — discovery_issue 4/5
+✓ Strands requested create_coaching_action   — create_coaching_action executed
+⚠ Coaching warranted — repeated evidence
+
+# Churn signal → ESCALATE (human-in-the-loop)
+✓ Strands requested check_escalation_signals
+✓ Strands requested get_call_evidence
+✓ Strands requested get_rep_history
+✓ Strands requested escalate_to_manager      — escalate_to_manager executed
+🔴 Manager review required
+```
+
+Deterministic policy (`decide()`) is kept as `validate_agent_decision` / `check_hard_escalation_rules` / `calculate_policy_signals` and as the offline `CoachDeterministicModel` (so `DEMO_MODE=true` still runs the full Strands loop with no keys). It never makes the primary decision — `Agent(prompt, structured_output_model=CoachDecision).structured_output` does, with validation/retry and a safe fallback only if the loop crashes.
+
 ## Strands Agents SDK
 
 Strands Agents SDK is central to the Coach implementation. The Coach agent owns the loop — CallLens never drives the decision. The agent is given a small, typed toolset and must decide when to call tools, when it has enough evidence, and when to stop:
 
 - `analyze_call(transcript, rubric)` — run the full CallLens pipeline
 - `get_call_evidence(call_id, dimension)` — retrieve verified evidence with timestamps
+- `check_escalation_signals(call_id, transcript_snippet)` — hard escalation guardrail as a tool
 - `get_rep_history(rep_id)` — last 5 calls, pattern counts (e.g. discovery miss 4/5)
 - `get_available_rubrics()` — list declarative rubrics
 - `create_coaching_action(call_id, message, evidence)` — emit a COACH action
@@ -561,8 +618,8 @@ See `infra/` for AWS sketches (ECS/RDS/S3/SQS) — not required for the local/Az
 
 **CallLens Coach is the new hackathon work.** It is the autonomous decision-making layer built in this same repository as an add-on (see **Architecture**):
 
-- Strands Agents SDK as the central orchestration loop (tool calling, evidence inspection, NO_ACTION/COACH/ESCALATE decision, explainable rationale, human-in-the-loop escalation)
-- Coach action tools (`analyze_call`, `get_call_evidence`, `get_rep_history`, `get_available_rubrics`, `create_coaching_action`, `escalate_to_manager`, `record_agent_decision`) and clean MCP adaptation of existing CallLens tools
+- Strands Agents SDK as the central orchestration loop (tool calling, `check_escalation_signals` / evidence / history, structured `CoachDecision` via `structured_output_model`, validation + hard-escalation guardrails, NO_ACTION/COACH/ESCALATE + action tool). `decide()` is only a fallback/validator, not the engine — `/coach` shows `Decision engine: Strands Agents SDK` and `Agent tools used:` per call.
+- Coach action tools (`analyze_call`, `get_call_evidence`, `check_escalation_signals`, `get_rep_history`, `get_available_rubrics`, `create_coaching_action`, `escalate_to_manager`, `record_agent_decision`) and clean MCP adaptation of existing CallLens tools
 - Longitudinal rep history / context (lightweight SQLite, 5-call window) so repeated patterns can be distinguished from isolated misses
 - Demo workflow with three synthetic scenarios and a one-screen Coach dashboard (`/coach`) showing summary, call list, agent activity trace, and evidence panel — designed so “doing nothing” is visible as correct behavior
 - Branded architecture diagrams (`docs/diagrams/*.html` + `*.svg`) generated with `cathrynlavery/diagram-design` and skinned to the CallLens brand

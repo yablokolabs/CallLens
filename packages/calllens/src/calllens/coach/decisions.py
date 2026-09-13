@@ -261,6 +261,83 @@ def detect_escalation(report: CallReport) -> tuple[bool, str, float]:
     return False, "", 0.0
 
 
+# --- Guardrails: deterministic validators that SUPPORT the Strands agent ---
+# These are NOT the primary decision engine. Strands owns NO_ACTION / COACH /
+# ESCALATE via structured output; these only validate / repair / enforce
+# safety (confidence range, evidence presence, human_review, escalation).
+
+
+def calculate_policy_signals(
+    report: CallReport,
+    history: RepHistorySummary | None,
+) -> dict:
+    """Lightweight deterministic signals for the agent/tools (not a decision)."""
+    low_dims = _low_dimensions(report, core_only=True)
+    talk_ratio = _rep_talk_ratio(report.metrics)
+    should_esc, esc_reason, esc_conf = detect_escalation(report)
+    return {
+        "should_escalate": should_esc,
+        "escalation_reason": esc_reason,
+        "escalation_confidence": esc_conf,
+        "low_dimensions": [
+            {"dimension": s.dimension, "label": s.label, "score": s.result.score} for s in low_dims
+        ],
+        "talk_ratio": talk_ratio,
+        "high_talk": talk_ratio >= HIGH_TALK_RATIO,
+        "history_note": history.note if history else "No prior calls",
+        "overall_score": float(report.overall_score),
+    }
+
+
+def check_hard_escalation_rules(
+    transcript_text: str | None,
+    report: CallReport | None = None,
+) -> tuple[bool, str, float]:
+    """Hard escalation that must not be missed (transcript + report)."""
+    if transcript_text:
+        from calllens.coach.transcript_keywords import transcript_has_escalation
+
+        should, reason, conf = transcript_has_escalation(transcript_text)
+        if should:
+            return True, reason, conf
+    if report is not None:
+        should, reason, conf = detect_escalation(report)
+        if should:
+            return True, reason, conf
+    return False, "", 0.0
+
+
+def validate_agent_decision(decision: CoachDecision) -> tuple[bool, str | None]:
+    """Validate Strands structured output. Returns (ok, error_reason)."""
+    if decision.confidence < 0 or decision.confidence > 1:
+        return False, f"confidence {decision.confidence} out of [0,1]"
+    if decision.decision not in (DecisionType.NO_ACTION, DecisionType.COACH, DecisionType.ESCALATE):
+        return False, f"invalid decision {decision.decision}"
+    # Evidence required for COACH / ESCALATE
+    if decision.decision in (DecisionType.COACH, DecisionType.ESCALATE) and not decision.evidence:
+        return False, f"{decision.decision} requires evidence"
+    # human_review only on ESCALATE
+    if decision.decision == DecisionType.ESCALATE and not decision.human_review_required:
+        return False, "ESCALATE must set human_review_required=true"
+    if decision.decision != DecisionType.ESCALATE and decision.human_review_required:
+        return False, "only ESCALATE may set human_review_required"
+    # recommended_action must align
+    if decision.decision == DecisionType.NO_ACTION and decision.recommended_action is not None:
+        return False, "NO_ACTION must not have recommended_action"
+    if decision.decision in (DecisionType.COACH, DecisionType.ESCALATE):
+        if decision.recommended_action is None:
+            return False, f"{decision.decision} requires recommended_action"
+        if decision.recommended_action.type != decision.decision:
+            return False, "recommended_action.type must match decision"
+    # evidence timestamps sanity
+    for ev in decision.evidence:
+        if ev.seconds < 0:
+            return False, "evidence seconds must be >=0"
+        if not ev.quote or not ev.reason:
+            return False, "evidence quote/reason must be non-empty"
+    return True, None
+
+
 def _build_trace(
     report: CallReport,
     history: RepHistorySummary | None,

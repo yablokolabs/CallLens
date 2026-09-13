@@ -149,6 +149,7 @@ export default function CoachPage() {
           </div>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">CALLLENS COACH</h1>
           <p className="mt-1 text-sm text-zinc-400">The autonomous manager — reviews every call, acts only when it should.</p>
+          <p className="mt-1 text-[11px] font-medium uppercase tracking-widest text-indigo-400/80">Decision engine: Strands Agents SDK — CallLens is the evidence layer</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -183,7 +184,7 @@ export default function CoachPage() {
       <section>
         <div className="flex items-baseline justify-between">
           <SectionTitle sub="Autonomous review — silence is a correct outcome">Today</SectionTitle>
-          <span className="text-xs text-zinc-500">{summary ? `${summary.total} calls analyzed` : "—"}</span>
+          <span className="text-xs text-zinc-500">{summary ? `${summary.total} calls analyzed` : "—"} · Decision engine: Strands Agents SDK</span>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <Card className="border-emerald-900/30 bg-emerald-950/10">
@@ -450,6 +451,26 @@ export default function CoachPage() {
               {/* Agent activity trace — no hidden chain-of-thought */}
               <Card>
                 <SectionTitle sub="What the agent did — not what it thought">Agent activity</SectionTitle>
+                <div className="mb-3 flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Decision engine:</span>
+                  <span className="rounded-full border border-indigo-900/40 bg-indigo-950/30 px-2 py-0.5 text-[10px] font-medium text-indigo-300">Strands Agents SDK</span>
+                  <span className="text-[10px] text-zinc-600">· CallLens is the evidence layer</span>
+                </div>
+                {detail.trace.some((s) => s.step.includes("Strands requested")) ? (
+                  <div className="mb-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2">
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Agent tools used</div>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {detail.trace
+                        .filter((s) => s.step.includes("Strands requested"))
+                        .map((s) => s.step.replace("Strands requested ", ""))
+                        .map((tool) => (
+                          <span key={tool} className="rounded-full border border-zinc-800 bg-zinc-900 px-2 py-0.5 font-mono text-[10px] text-zinc-300">
+                            {tool}
+                          </span>
+                        ))}
+                    </div>
+                  </div>
+                ) : null}
                 <ol className="space-y-2">
                   {detail.trace.map((step, i) => (
                     <li key={i} className="flex gap-3">

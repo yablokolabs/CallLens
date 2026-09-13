@@ -128,79 +128,113 @@ class CoachService:
     def _decide_from_report(
         self, report: CallReport, *, rep_id: str | None, raw_transcript: str | None
     ) -> CoachDecision:
-        from calllens.coach.decisions import DecisionType, decide
-        from calllens.coach.transcript_keywords import transcript_has_escalation
+        """Strands is the decision layer — CallLens is the evidence layer.
 
-        history = self.history_store.summary(rep_id) if rep_id else None
-        provider = (
-            self.settings.coach_model_provider
-            or self.settings.model_provider
-            or self.settings.llm_provider
-            or "mock"
-        )
-        # Stash raw text on report for agent supplement as fallback
+        The Strands Coach Agent owns tool selection, evidence gathering,
+        history use, decision choice, and the action tool. Deterministic
+        policy is only guardrails/validation/fallback inside the agent.
+        """
+        import contextlib
+
+        # Stash raw text + report so agent tools (get_call_evidence,
+        # check_escalation_signals) can find this call during the loop.
         if raw_transcript:
-            import contextlib
-
             with contextlib.suppress(Exception):
                 object.__setattr__(report, "_raw_transcript_text", raw_transcript)  # type: ignore[attr-defined]
-        decision = decide(report, history=history, model_provider=str(provider))
-        # Transcript-level escalation supplement (demo determinism with mocks)
-        if decision.decision != DecisionType.ESCALATE and raw_transcript:
-            should, reason, conf = transcript_has_escalation(raw_transcript)
-            if should:
-                from calllens.coach.decisions import (
-                    AgentTraceStep,
-                    DecisionEvidence,
-                    RecommendedAction,
-                )
+        import contextlib as _ctx2
 
-                decision.decision = DecisionType.ESCALATE
-                decision.confidence = conf
-                decision.summary = reason
-                decision.reason = reason
-                decision.human_review_required = True
-                decision.recommended_action = RecommendedAction(
-                    type=DecisionType.ESCALATE, message=reason, urgency="high"
-                )
-                if not decision.evidence:
-                    decision.evidence = [
-                        DecisionEvidence(
-                            timestamp="00:01:00",
-                            seconds=60.0,
-                            quote=raw_transcript[:140],
-                            reason=reason,
-                        )
+        with _ctx2.suppress(Exception):
+            self._reports[str(report.call_id)] = report  # type: ignore[attr-defined]
+
+        history = self.history_store.summary(rep_id) if rep_id else None
+        agent = self._agent()
+        try:
+            decision = agent.evaluate_report(
+                report,
+                history=history,
+                rep_id=rep_id,
+                raw_transcript=raw_transcript,
+                rubric_name="consultative_sales",
+            )
+        except Exception:
+            # Absolute safety fallback — deterministic decide is the
+            # repair oracle, not the primary engine. This path only runs
+            # if the Strands loop itself crashes.
+            from calllens.coach.decisions import DecisionType, decide
+            from calllens.coach.transcript_keywords import transcript_has_escalation
+
+            provider = (
+                self.settings.coach_model_provider
+                or self.settings.model_provider
+                or self.settings.llm_provider
+                or "mock"
+            )
+            decision = decide(report, history=history, model_provider=str(provider))
+            if decision.decision != DecisionType.ESCALATE and raw_transcript:
+                should, reason, conf = transcript_has_escalation(raw_transcript)
+                if should:
+                    from calllens.coach.decisions import (
+                        AgentTraceStep,
+                        DecisionEvidence,
+                        RecommendedAction,
+                    )
+
+                    decision.decision = DecisionType.ESCALATE
+                    decision.confidence = conf
+                    decision.summary = reason
+                    decision.reason = reason
+                    decision.human_review_required = True
+                    decision.recommended_action = RecommendedAction(
+                        type=DecisionType.ESCALATE, message=reason, urgency="high"
+                    )
+                    if not decision.evidence:
+                        decision.evidence = [
+                            DecisionEvidence(
+                                timestamp="00:01:00",
+                                seconds=60.0,
+                                quote=raw_transcript[:140],
+                                reason=reason,
+                            )
+                        ]
+                    decision.trace = [
+                        AgentTraceStep(
+                            step="Analyzing conversation",
+                            status="done",
+                            detail="CallLens analysis completed",
+                        ),
+                        AgentTraceStep(
+                            step="Checking evidence",
+                            status="done",
+                            detail="Transcript escalation signal detected",
+                        ),
+                        AgentTraceStep(
+                            step="Reviewing rep history",
+                            status="done",
+                            detail=history.note
+                            if history and history.note
+                            else "5-call window checked",
+                        ),
+                        AgentTraceStep(
+                            step="Decision", status="done", detail="Manager review required"
+                        ),
+                        AgentTraceStep(
+                            step="Action",
+                            status="done",
+                            detail="Escalation flagged for human review",
+                        ),
                     ]
-                decision.trace = [
-                    AgentTraceStep(
-                        step="Analyzing conversation",
-                        status="done",
-                        detail="CallLens analysis completed",
-                    ),
-                    AgentTraceStep(
-                        step="Checking evidence",
-                        status="done",
-                        detail="Transcript escalation signal detected",
-                    ),
-                    AgentTraceStep(
-                        step="Reviewing rep history",
-                        status="done",
-                        detail=history.note
-                        if history and history.note
-                        else "5-call window checked",
-                    ),
-                    AgentTraceStep(
-                        step="Decision", status="done", detail="Manager review required"
-                    ),
-                    AgentTraceStep(
-                        step="Action", status="done", detail="Escalation flagged for human review"
-                    ),
-                ]
-        if rep_id:
-            self.history_store.record(rep_id, report, decision.decision.value)
-            decision.history_context = self.history_store.summary(rep_id)
-        decision.call_id = report.call_id
+            if rep_id:
+                try:
+                    self.history_store.record(rep_id, report, decision.decision.value)
+                    decision.history_context = self.history_store.summary(rep_id)
+                except Exception:
+                    pass
+            decision.call_id = report.call_id
+        # Persist for GET /api/coach/calls/{id}
+        with _ctx2.suppress(Exception):
+            key = decision.call_id or report.call_id
+            self._decisions[str(key)] = decision  # type: ignore[attr-defined]
+            self._reports[str(key)] = report  # type: ignore[attr-defined]
         return decision
 
     def seed_demo(self) -> list[CoachDecision]:
