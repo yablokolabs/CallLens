@@ -7,12 +7,13 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CallLens — Conversation Intelligence",
+  title: "CallLens — Conversation Intelligence + Coach",
   description:
-    "Open-source conversation intelligence and behavioral evaluation powered by LangGraph. Every semantic score is evidence-backed.",
+    "Open-source conversation intelligence and behavioral evaluation powered by LangGraph. Every semantic score is evidence-backed. Coach adds autonomous NO_ACTION / COACH / ESCALATE decisions.",
 };
 
 const NAV = [
+  { href: "/coach", label: "Coach" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/calls", label: "Calls" },
   { href: "/reps", label: "Representatives" },

@@ -356,6 +356,87 @@ In demo mode synthetic calls are seeded and the three scenarios are available in
 
 ---
 
+## Demo Walkthrough (60-second judge path)
+
+No keys, no audio files — everything runs on mocks. Copy, paste, judge.
+
+### 0. Start the stack
+
+```bash
+cp .env.example .env
+echo "DEMO_MODE=true" >> .env
+docker compose up --build -d
+# Backend: http://localhost:8000/docs  Frontend: http://localhost:3000
+```
+
+Health check (optional):
+
+```bash
+curl -s http://localhost:8000/health | jq .
+# { "status": "ok", "llm_provider": "mock" }
+```
+
+### 1. Open the Coach
+
+```
+http://localhost:3000/coach
+```
+
+- If not auto-seeded, click **Load Demo Calls** (top-right).
+- You should see:
+
+```
+CALLLENS COACH — TODAY
+18 calls analyzed · 15  No action required · 2  Coaching generated · 1  Manager review required
+```
+
+### 2. Three scenarios — 20 seconds each
+
+| # | Call | Expected decision | What to verify |
+|---|---|---|---|
+| A | **Sarah — Acme Corp** | `NO_ACTION` ✓ | Click the row → `NO_ACTION` badge, confidence ~0.89, short reason like “No material coaching or escalation condition detected.” No evidence panel needed — silence was correct. |
+| B | **Daniel — Northstar** | `COACH` ⚠ | Click **View evidence** → discovery score low, rep talk ratio high (e.g. 79%), 2–3 timestamped excerpts with quotes, metric + rubric criterion cited, and a concrete coaching message: “On your next call, pause after the customer raises a concern and ask one discovery question…” |
+| C | **Maya — Contoso** | `ESCALATE` 🔴 | Red **Manager review required** banner, reason + urgency + churn/risk evidence with timestamps. `human_review_required: true` is visible. No auto-action beyond flagging. |
+
+### 3. Evidence & agent trace (pick any of B/C)
+
+1. Open Daniel or Maya → **Agent activity** card should show (no chain-of-thought):
+   ```
+   ✓ CallLens analysis completed
+   ✓ 3 relevant transcript moments found
+   ✓ Similar issue detected in 3 previous calls
+   → Coaching warranted / Manager review required
+   ```
+2. Scroll to **Evidence** → metric (e.g. `Rep talk ratio 79%`), rubric dimension, 02:14-style timestamps that seek the transcript, confidence (≈0.91), and resulting action.
+
+### 4. API (same data, for curl judges)
+
+```bash
+# Summary counts
+curl -s http://localhost:8000/api/coach/summary | jq .
+
+# List calls (with decision badges)
+curl -s http://localhost:8000/api/coach/calls | jq '.[0:3] | .[] | {id, decision, confidence}'
+
+# Full decision for one call (replace {id} with an id from above)
+curl -s http://localhost:8000/api/coach/calls/{id} | jq '.decision, .confidence, .evidence, .human_review_required'
+
+# Rep history gating (why B got coached — pattern 3/5)
+curl -s http://localhost:8000/api/coach/reps/{rep_id}/history | jq .
+```
+
+All three decisions, evidence, metrics, rubric labels and `human_review_required` are visible via API and in the UI. The interactive branded diagrams are at [`docs/diagrams/architecture.html`](docs/diagrams/architecture.html), [`agent-flow.html`](docs/diagrams/agent-flow.html), [`decision-flow.html`](docs/diagrams/decision-flow.html).
+
+### 5. What to screenshot
+
+- The one-screen `CALLLENS COACH` summary (today + list).
+- Daniel's evidence panel (the richest EXPLAINABLE-AI proof).
+- Maya's red escalation banner (the human-in-the-loop proof).
+
+If the stack doesn't come up, `docker compose logs api web` is enough — the stack runs fully on `LLM_PROVIDER=mock`, no ElevenLabs/Bedrock keys required, and the demo seed is deterministic so recording never flakes.
+
+---
+
 ## Configuration
 
 See [`.env.example`](.env.example). Key vars:

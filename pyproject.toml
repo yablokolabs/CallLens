@@ -12,6 +12,13 @@ license = { text = "MIT" }
 authors = [{ name = "Yabloko Labs", email = "ceo@yablokolabs.com" }]
 keywords = [
     "conversation-intelligence",
+    "strands-agents-sdk",
+    "ai-agents",
+    "agentic-ai",
+    "sales-coaching",
+    "human-in-the-loop",
+    "explainable-ai",
+    "mcp",
     "langgraph",
     "speech-to-text",
     "diarization",
@@ -45,6 +52,12 @@ dependencies = [
     "aiosqlite>=0.20",
     "greenlet>=3.0",
     "elevenlabs>=2.40",
+    "strands-agents>=1.55",
+    "boto3>=1.35",
+    "opentelemetry-api>=1.27",
+    "opentelemetry-sdk>=1.27",
+    "opentelemetry-instrumentation>=0.48b0",
+    "opentelemetry-instrumentation-threading>=0.48b0",
 ]
 
 [project.optional-dependencies]

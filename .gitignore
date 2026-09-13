@@ -35,6 +35,11 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 
+# ── Agents / local tooling (not part of repo) ───────────────────────
+.agents/
+.claude/
+skills-lock.json
+
 # ── Editors / OS ──────────────────────────────────────────────────────
 .idea/
 .vscode/

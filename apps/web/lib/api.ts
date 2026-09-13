@@ -44,6 +44,38 @@ export const api = {
       trend: string;
     }>(`/api/v1/reps/${repId}/analytics`),
   runEval: (payload: unknown) => request<{ overall_mae: number; runs: unknown[] }>("/api/v1/evals/run", { method: "POST", body: JSON.stringify(payload) }),
+
+  // Coach (Strands agent — NO_ACTION / COACH / ESCALATE)
+  coachSummary: () => request<{ total: number; by_decision: Record<string, number>; today_label: string; demo_seeded: boolean }>("/api/coach/summary"),
+  coachCalls: () =>
+    request<{ id: string; call_id: string; decision: string; confidence: number; summary: string; human_review_required: boolean; created_at: string | null }[]>("/api/coach/calls"),
+  coachCall: (id: string) =>
+    request<{
+      decision: string;
+      confidence: number;
+      summary: string;
+      reason: string;
+      evidence: { timestamp: string; seconds: number; quote: string; reason: string; speaker: string | null }[];
+      metrics: Record<string, unknown>;
+      rubric_context: { dimension: string; label: string; score: number; confidence: number }[];
+      recommended_action: { type: string; message: string; urgency: string } | null;
+      human_review_required: boolean;
+      trace: { step: string; status: string; detail: string | null }[];
+      history_context: { rep_id: string; total_calls: number; pattern_counts: Record<string, number>; last_decisions: string[]; note: string } | null;
+      call_id: string | null;
+      rubric_name: string | null;
+      model_provider: string | null;
+      report: CallReport | null;
+    }>(`/api/coach/calls/${encodeURIComponent(id)}`),
+  coachRepHistory: (repId: string) =>
+    request<{ rep_id: string; total_calls: number; pattern_counts: Record<string, number>; last_decisions: string[]; note: string }>(`/api/coach/reps/${encodeURIComponent(repId)}/history`),
+  coachAnalyze: (body: { transcript: string; rubric_name?: string; rep_id?: string; call_id?: string }) =>
+    request<{ decision: string; confidence: number; summary: string; reason: string; evidence: unknown[]; metrics: Record<string, unknown>; rubric_context: unknown[]; recommended_action: unknown | null; human_review_required: boolean; trace: unknown[]; history_context: unknown | null; call_id: string | null }>(`/api/coach/analyze`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  coachSeed: () =>
+    request<{ seeded: number; decisions: { call_id: string; decision: string; confidence: number }[]; summary: { total: number; by_decision: Record<string, number> } }>(`/api/coach/seed`, { method: "POST" }),
 };
 
 export function formatTimestamp(seconds: number): string {
