@@ -291,24 +291,33 @@ class CoachService:
     def list_decisions(self) -> list[CoachDecision]:
         self.ensure_seed()
         if not self._decisions:
+            # For live models (e.g. Sarvam) don't auto-seed 18 calls inside
+            # a request — that blocks the event loop and hangs /health and /docs.
+            # The frontend handles empty -> "Load Demo Calls" -> POST /seed.
+            try:
+                provider = (
+                    self.settings.coach_model_provider
+                    or self.settings.model_provider
+                    or self.settings.llm_provider
+                    or "mock"
+                ).lower()
+                if provider not in ("mock", ""):
+                    return []
+            except Exception:
+                pass
             self.seed_demo()
         return sorted(self._decisions.values(), key=lambda d: d.call_id or "")
 
     def get_decision(self, call_id: str) -> CoachDecision | None:
         self.ensure_seed()
-        if call_id not in self._decisions and not self._decisions:
-            # Lazy seed for live-model DEMO_MODE (avoids startup hang).
-            import contextlib as _ctx_lazy
-
-            with _ctx_lazy.suppress(Exception):
-                self.seed_demo()
+        # Don't auto-seed a full 18-call batch for a single missing id when live.
         return self._decisions.get(call_id)
 
     def get_report(self, call_id: str) -> CallReport | None:
         return self._reports.get(call_id)
 
     def summary(self) -> dict:
-        # Never block /summary on a full Sarvam seed — defer until /calls or /seed.
+        # Never block /summary on a full Sarvam seed — defer until explicit POST /seed.
         # The frontend handles empty -> Load Demo Calls.
         try:
             provider = (
