@@ -19,6 +19,18 @@ from calllens.coach.service import get_coach_service
 router = APIRouter(prefix="/api/coach", tags=["coach"])
 
 
+def _is_live(svc) -> bool:  # noqa: ANN001 — service type avoids a circular import
+    try:
+        return (
+            svc.settings.coach_model_provider
+            or svc.settings.model_provider
+            or svc.settings.llm_provider
+            or "mock"
+        ).lower() not in ("mock", "")
+    except Exception:
+        return False
+
+
 def _app(request: Request) -> AppState:
     return request.app.state.calllens
 
@@ -128,17 +140,7 @@ async def coach_analyze(request: Request, body: AnalyzeBody) -> dict:
 async def coach_seed(request: Request) -> dict:
     """Seed DEMO_MODE data. For live providers seeds in background so /docs stays live."""
     svc = get_coach_service(_app(request).settings)
-    try:
-        provider = (
-            svc.settings.coach_model_provider
-            or svc.settings.model_provider
-            or svc.settings.llm_provider
-            or "mock"
-        ).lower()
-        is_live = provider not in ("mock", "")
-    except Exception:
-        is_live = False
-    if is_live and not svc._decisions:  # type: ignore[attr-defined]
+    if _is_live(svc) and not svc._decisions:  # type: ignore[attr-defined]
         if getattr(svc, "_seeding", False):
             return {"seeding": True, "seeded": 0, "decisions": [], "summary": svc.summary()}
         svc._seed_error = None  # type: ignore[attr-defined]

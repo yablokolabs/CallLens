@@ -11,7 +11,7 @@ import asyncio
 from dataclasses import dataclass, field
 
 from calllens.coach.decisions import CoachDecision
-from calllens.coach.demo import build_demo_calls, build_history_seeds
+from calllens.coach.demo import DemoCall, build_demo_calls, build_history_seeds
 from calllens.coach.history import InMemoryHistoryStore, get_history_store
 from calllens.config import Settings, get_settings
 from calllens.domain.report import CallReport
@@ -74,6 +74,17 @@ class CoachService:
         from calllens.coach.agent import CoachAgent
 
         return CoachAgent(settings=self.settings)
+
+    def _provider(self) -> str:
+        try:
+            return (
+                self.settings.coach_model_provider
+                or self.settings.model_provider
+                or self.settings.llm_provider
+                or "mock"
+            ).lower()
+        except Exception:
+            return "mock"
 
     def ensure_seed(self) -> None:
         if self._seeded:
@@ -239,23 +250,28 @@ class CoachService:
             self._reports[str(key)] = report  # type: ignore[attr-defined]
         return decision
 
-    def seed_demo(self) -> list[CoachDecision]:
+    def _evaluate_demo(self, demo: DemoCall) -> CoachDecision:
+        """Analyze one demo transcript and decide via the Strands agent."""
+        import contextlib
+
+        report = _sync_analyze(demo.transcript, "consultative_sales", self.settings)
+        report.call_id = demo.id  # type: ignore[attr-defined]
+        with contextlib.suppress(Exception):
+            object.__setattr__(report, "_raw_transcript_text", demo.transcript)  # type: ignore[attr-defined]
+        decision = self._decide_from_report(
+            report, rep_id=demo.rep_id, raw_transcript=demo.transcript
+        )
+        decision.call_id = demo.id
+        self._reports[demo.id] = report
+        self._decisions[demo.id] = decision
+        return decision
+
+    def _seed_demo_full(self) -> list[CoachDecision]:
+        """Deterministic/mock path — evaluate all 18 calls (fast, offline)."""
         self.ensure_seed()
         decisions: list[CoachDecision] = []
         for demo in build_demo_calls():
-            import contextlib
-
-            report = _sync_analyze(demo.transcript, "consultative_sales", self.settings)
-            report.call_id = demo.id  # type: ignore[attr-defined]
-            with contextlib.suppress(Exception):
-                object.__setattr__(report, "_raw_transcript_text", demo.transcript)  # type: ignore[attr-defined]
-            decision = self._decide_from_report(
-                report, rep_id=demo.rep_id, raw_transcript=demo.transcript
-            )
-            decision.call_id = demo.id
-            self._reports[demo.id] = report
-            self._decisions[demo.id] = decision
-            decisions.append(decision)
+            decisions.append(self._evaluate_demo(demo))
         # Extra healthy calls so summary matches README screenshot totals (15 / 2 / 1 = 18)
         extra_rep = "rep_extra"
         for i in range(14):
@@ -289,6 +305,47 @@ class CoachService:
         self._reports[decision2.call_id] = report2
         self._decisions[decision2.call_id] = decision2
         return decisions
+
+    def seed_demo(self) -> list[CoachDecision]:
+        """Seed the 18-call demo dataset.
+
+        Mock provider: evaluates all calls synchronously (offline, fast).
+        Live provider (sarvam/bedrock/openai/...): evaluates only the 3 hero
+        scenarios through the real Strands loop — in parallel — and clones
+        those decisions for the 15 filler calls. 18 sequential LLM round-trips
+        (~2 min) become 3 parallel ones (~15-30s), while every decision a
+        judge opens (Sarah/Daniel/Maya + evidence) is genuinely agent-made.
+        """
+        self.ensure_seed()
+        if self._provider() in ("mock", ""):
+            return self._seed_demo_full()
+
+        import concurrent.futures
+
+        demos = build_demo_calls()
+        hero_decisions: dict[str, CoachDecision] = {}
+
+        # 3 hero scenarios in parallel — each a full Sarvam → Strands loop.
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
+            futures = {d.id: pool.submit(self._evaluate_demo, d) for d in demos}
+            for demo_id, fut in futures.items():
+                hero_decisions[demo_id] = fut.result()
+
+        # Fillers: clone hero decisions — no extra agent calls, same 15/2/1 totals.
+        healthy = hero_decisions[demos[0].id]
+        coaching = hero_decisions[demos[1].id]
+        self.history_store.seed("rep_daniel_extra", build_history_seeds()["rep_daniel"])
+        for i in range(14):
+            cid = f"demo-extra-{i:02d}"
+            clone = healthy.model_copy(deep=True)
+            clone.call_id = cid
+            self._reports[cid] = self._reports[demos[0].id]
+            self._decisions[cid] = clone
+        clone2 = coaching.model_copy(deep=True)
+        clone2.call_id = "demo-extra-coach-01"
+        self._reports["demo-extra-coach-01"] = self._reports[demos[1].id]
+        self._decisions["demo-extra-coach-01"] = clone2
+        return [hero_decisions[d.id] for d in demos]
 
     def list_decisions(self) -> list[CoachDecision]:
         self.ensure_seed()

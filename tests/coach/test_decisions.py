@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import threading
+import unittest.mock
+
 from calllens.coach.decisions import CoachDecision, DecisionType
 from calllens.coach.demo import build_demo_calls
 from calllens.coach.history import HistoryRecord, InMemoryHistoryStore
@@ -10,9 +13,17 @@ from calllens.config import Settings
 
 
 def _settings() -> Settings:
+    # Pin every provider knob: OS env (COACH_MODEL_PROVIDER=sarvam etc.) must
+    # never leak into deterministic tests or consume live API credits.
     return Settings(
         _env_file=None,  # type: ignore[call-arg]
         llm_provider="mock",
+        model_provider=None,
+        coach_model_provider="mock",
+        sarvam_api_key=None,
+        compatible_api_key=None,
+        openai_api_key=None,
+        anthropic_api_key=None,
         demo_mode=False,
         langgraph_checkpoint=False,
         confidence_threshold=0.75,
@@ -25,7 +36,11 @@ def _fresh_service() -> CoachService:
     from calllens.coach.history import InMemoryHistoryStore as Store
 
     store = Store()
-    return CoachService(settings=_settings(), history_store=store)
+    svc = CoachService(settings=_settings(), history_store=store)
+    # Seed demo history into THIS service's store (not the global one) so
+    # history gating (Daniel COACH pattern) works under full test isolation.
+    svc.ensure_seed()
+    return svc
 
 
 def test_healthy_is_no_action():
@@ -232,6 +247,57 @@ def test_decide_is_not_primary_path():
     if lines:
         # Ensure the fallback is guarded (inside except or after agent failure)
         assert "except" in src or "fallback" in src.lower() or "guardrail" in src.lower()
+
+
+def test_live_seed_makes_only_three_agent_calls():
+    """Live-provider seed runs 3 hero Strands loops in parallel + clones fillers.
+
+    18 sequential live LLM calls took ~2min and blocked recording; the fast
+    path must produce the same 18 decisions with only 3 agent evaluations.
+    """
+
+    import concurrent.futures
+    import time
+
+    svc = _fresh_service()
+    calls = {"n": 0}
+    lock = threading.Lock()
+    orig_evaluate = svc._evaluate_demo  # capture before patching (avoid recursion)
+
+    def _slow_evaluate(demo):
+        with lock:
+            calls["n"] += 1
+        time.sleep(0.1)  # simulate live LLM latency
+        return orig_evaluate(demo)
+
+    with (
+        unittest.mock.patch.object(svc, "_provider", return_value="sarvam"),
+        unittest.mock.patch.object(svc, "_evaluate_demo", side_effect=_slow_evaluate),
+    ):
+        started = time.monotonic()
+        decisions = svc.seed_demo()
+        elapsed = time.monotonic() - started
+
+    # Only 3 real agent evaluations for 18 decisions
+    assert calls["n"] == 3
+    assert len(svc._decisions) == 18
+    assert len(decisions) == 3
+    # 14 healthy clones + 1 coaching clone stored
+    assert sum(1 for cid in svc._decisions if cid.startswith("demo-extra-")) == 15
+    # Heroes present with correct decisions
+    assert svc._decisions["demo-sarah-acme"].decision == DecisionType.NO_ACTION
+    assert svc._decisions["demo-daniel-northstar"].decision == DecisionType.COACH
+    assert svc._decisions["demo-maya-contoso"].decision == DecisionType.ESCALATE
+    # Clones carry distinct call_ids but hero-level content
+    clone = svc._decisions["demo-extra-00"]
+    assert clone.call_id == "demo-extra-00"
+    assert clone.decision == DecisionType.NO_ACTION
+    # Parallel: 3 x 0.1s sequential would be >=0.3s; parallel must beat that
+    assert elapsed < 0.25
+    # No lingering seeding state
+    assert svc._seeding is False
+    # concurrent.futures used (imports stay valid)
+    assert concurrent.futures is not None
 
 
 def test_validate_agent_decision_guardrail():

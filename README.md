@@ -396,7 +396,9 @@ In demo mode synthetic calls are seeded and the three scenarios are available in
 
 ### Live Coach with Sarvam (optional, real LLM)
 
-Deterministic `mock` is recommended for recording (stable, offline). For a live `Sarvam → Strands → tools → CoachDecision` demo the same 3 synthetic calls run through the real model — Strands owns the loop, deterministic `decide()` is only guardrail/fallback:
+Deterministic `mock` is recommended for recording (stable, offline). For a live `Sarvam → Strands → tools → CoachDecision` demo the same 3 synthetic calls run through the real model — Strands owns the loop, deterministic `decide()` is only guardrail/fallback.
+
+**Fast live seeding:** with a live provider, `Load Demo Calls` runs only the **3 hero scenarios through real Strands loops — in parallel** (~15-30s total) and clones those agent decisions for the 15 filler calls, so the 15/2/1 dashboard totals stay intact without 18 sequential LLM round-trips. Seeding runs in the background: the API stays responsive (`GET /health`, `/docs` never block) and the button polls until all 18 appear.
 
 ```env
 # .env — keep DEMO_MODE=true so the same 3 synthetic calls are used
