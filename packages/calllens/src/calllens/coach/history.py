@@ -74,7 +74,11 @@ class InMemoryHistoryStore:
         buf = self._by_rep.get(rep_id, [])
         if not buf:
             return RepHistorySummary(
-                rep_id=rep_id, total_calls=0, pattern_counts={}, last_decisions=[], note="No prior calls"
+                rep_id=rep_id,
+                total_calls=0,
+                pattern_counts={},
+                last_decisions=[],
+                note="No prior calls",
             )
         counts: dict[str, int] = {}
         for r in buf:
@@ -85,7 +89,9 @@ class InMemoryHistoryStore:
             if r.worst_dimension:
                 counts[r.worst_dimension] = counts.get(r.worst_dimension, 0) + 1
         last = [r.decision for r in buf[-3:]]
-        note = f"Previous {len(buf)} calls: " + ", ".join(f"{k} {v}/{len(buf)}" for k, v in sorted(counts.items())[:3])
+        note = f"Previous {len(buf)} calls: " + ", ".join(
+            f"{k} {v}/{len(buf)}" for k, v in sorted(counts.items())[:3]
+        )
         if not counts:
             note = f"Previous {len(buf)} calls: no repeated issue"
         return RepHistorySummary(

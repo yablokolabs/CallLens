@@ -27,11 +27,7 @@ class BedrockLLMProvider(LangChainLLMProvider):
 
     def __init__(self, settings: Settings | None = None) -> None:
         settings = settings or get_settings()
-        model_id = (
-            settings.bedrock_model_id
-            or settings.coach_model_id
-            or settings.llm_model
-        )
+        model_id = settings.bedrock_model_id or settings.coach_model_id or settings.llm_model
         region = settings.aws_region
         if not model_id:
             raise LLMNotConfigured(

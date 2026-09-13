@@ -43,7 +43,9 @@ def get_available_rubrics() -> dict:
             {
                 "name": r.name,
                 "version": r.version,
-                "dimensions": [{"key": d.key, "label": d.label, "weight": d.weight} for d in r.dimensions],
+                "dimensions": [
+                    {"key": d.key, "label": d.label, "weight": d.weight} for d in r.dimensions
+                ],
             }
             for r in rubrics
         ]
@@ -72,7 +74,12 @@ def analyze_call(transcript: str, rubric: str = "consultative_sales") -> dict:
 
     async def _run() -> dict:
         state = await graph.run(
-            {"call_id": "coach-mcp-call", "transcript": parsed, "rubric": rubric_model, "rubric_name": rubric}
+            {
+                "call_id": "coach-mcp-call",
+                "transcript": parsed,
+                "rubric": rubric_model,
+                "rubric_name": rubric,
+            }
         )
         report = state["final_report"]
         return report.model_dump(mode="json")  # type: ignore[union-attr]
@@ -81,11 +88,18 @@ def analyze_call(transcript: str, rubric: str = "consultative_sales") -> dict:
         return asyncio.run(_run())
     except RuntimeError:
         # already in an event loop (e.g. inside FastAPI) — caller should use async path
-        return {"error": "analyze_call must be called outside an event loop for sync usage; use the async service instead"}
+        return {
+            "error": (  # noqa: E501 — user-facing diagnostic
+                "analyze_call must be called outside an event loop for sync usage; "
+                "use the async service instead"
+            )
+        }
 
 
 @tool
-def get_call_evidence(call_id: str, rubric: str = "consultative_sales", dimension: str | None = None) -> dict:
+def get_call_evidence(
+    call_id: str, rubric: str = "consultative_sales", dimension: str | None = None
+) -> dict:
     """Retrieve evidence for a call (or a single dimension).
 
     In this add-on, call analysis is on-demand; pass the same rubric you
@@ -95,8 +109,10 @@ def get_call_evidence(call_id: str, rubric: str = "consultative_sales", dimensio
         "call_id": call_id,
         "rubric": rubric,
         "dimension": dimension,
-        "note": "Evidence is returned as part of the CallReport; use analyze_call for fresh analysis "
-        "or GET /api/v1/calls/{id}/analysis for a persisted call.",
+        "note": (  # noqa: E501 — diagnostic note
+            "Evidence is returned as part of the CallReport; use analyze_call for fresh analysis "
+            "or GET /api/v1/calls/{id}/analysis for a persisted call."
+        ),
     }
 
 
@@ -152,10 +168,16 @@ def escalate_to_manager(
 
 @tool
 def record_agent_decision(decision: dict) -> dict:
-    """Persist the structured agent decision (confidence, summary, evidence, metrics, human_review_required)."""
+    """Persist the structured agent decision."""  # noqa: D401
+    # Stores confidence, summary, evidence, metrics, human_review_required.
+    # In this repo persistence lives in coach.service / storage.
     # In this repo the persistence is in coach.service / storage; this tool
     # acknowledges receipt so the agent loop can close.
-    return {"recorded": True, "decision": decision.get("decision"), "confidence": decision.get("confidence")}
+    return {
+        "recorded": True,
+        "decision": decision.get("decision"),
+        "confidence": decision.get("confidence"),
+    }
 
 
 # Re-export list for Agent(tools=[...]) wiring — satisfies strands-agents-sdk + mcp tagging

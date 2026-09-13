@@ -43,7 +43,7 @@ Managers shouldn't listen to 30 calls to discover the one conversation that need
 
 Interactive diagrams (full branded HTML) live in [`docs/diagrams/`](docs/diagrams/) — open them directly in a browser:
 
-- [`architecture.html`](docs/diagrams/architecture.html) · [`agent-flow.html`](docs/diagrams/agent-flow.html) · [`decision-flow.html`](docs/diagrams/decision-flow.html)
+- [`architecture.html`](docs/diagrams/architecture.html) · [`agent-flow.html`](docs/diagrams/agent-flow.html) · [`decision-flow.html`](docs/diagrams/decision-flow.html) · [`pipeline.html`](docs/diagrams/pipeline.html)
 
 A single-screen Coach dashboard is the design target:
 
@@ -140,30 +140,13 @@ The Strands agent calls `ANALYZE_CALL` → `GET_EVIDENCE` → `GET_HISTORY`, the
 
 Escalation signals (churn, anger, risk) win first. Otherwise rubric + evidence is evaluated, then rep history gates coaching: a repeated pattern (e.g. 4/5) → COACH, an isolated miss → NO_ACTION. Staying silent is a correct outcome.
 
-Existing CallLens pipeline detail:
+Existing CallLens pipeline detail — branded with the same CallLens skin (`cathrynlavery/diagram-design`):
 
-```mermaid
-flowchart TD
-    A[Audio / Transcript] --> B[Ingestion]
-    B --> C[ElevenLabs STT + Diarization]
-    C --> D[Transcript Normalization]
-    D --> E[LangGraph]
-    E --> F[Deterministic Metrics]
-    E --> G[Semantic Analysis]
-    G --> H[Sentiment]
-    G --> I[Topics]
-    G --> J[Intents]
-    F --> K[Evidence Verification]
-    H --> K
-    I --> K
-    J --> K
-    K --> L[Confidence Gate]
-    L -->|sufficient| M[Report]
-    L -->|insufficient| N[Bounded Re-score]
-    N --> K
-```
+![CallLens pipeline — evidence-backed scoring](docs/diagrams/pipeline.svg)
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/LANGGRAPH.md](docs/LANGGRAPH.md), and [docs/DATA_MODEL.md](docs/DATA_MODEL.md). Full diagram sources are `docs/diagrams/*.html` (branded HTML) and `docs/diagrams/*.svg` (portable SVG) — both generated from the same inline SVG.
+*Interactive: [`docs/diagrams/pipeline.html`](docs/diagrams/pipeline.html)*
+
+CallLens pipeline: **Audio or transcript → ElevenLabs Scribe v2 (STT + diarization) → transcript normalization → LangGraph orchestration** (deterministic metrics + semantic analysis in parallel) → **evidence verification → confidence gate → bounded re-score → CallReport**. Every score is timestamp-traceable. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/LANGGRAPH.md](docs/LANGGRAPH.md), and [docs/DATA_MODEL.md](docs/DATA_MODEL.md). Full diagram sources are `docs/diagrams/*.html` (branded HTML) and `docs/diagrams/*.svg` (portable SVG) — both generated from the same inline SVG.
 
 ---
 
@@ -425,7 +408,7 @@ curl -s http://localhost:8000/api/coach/calls/{id} | jq '.decision, .confidence,
 curl -s http://localhost:8000/api/coach/reps/{rep_id}/history | jq .
 ```
 
-All three decisions, evidence, metrics, rubric labels and `human_review_required` are visible via API and in the UI. The interactive branded diagrams are at [`docs/diagrams/architecture.html`](docs/diagrams/architecture.html), [`agent-flow.html`](docs/diagrams/agent-flow.html), [`decision-flow.html`](docs/diagrams/decision-flow.html).
+All three decisions, evidence, metrics, rubric labels and `human_review_required` are visible via API and in the UI. The interactive branded diagrams are at [`docs/diagrams/architecture.html`](docs/diagrams/architecture.html), [`agent-flow.html`](docs/diagrams/agent-flow.html), [`decision-flow.html`](docs/diagrams/decision-flow.html), [`pipeline.html`](docs/diagrams/pipeline.html).
 
 ### 5. What to screenshot
 

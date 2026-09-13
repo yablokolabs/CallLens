@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
-
-from calllens.coach.decisions import CoachDecision, DecisionType, decide
+from calllens.coach.decisions import CoachDecision, DecisionType
 from calllens.coach.demo import build_demo_calls
-from calllens.coach.history import InMemoryHistoryStore, HistoryRecord
+from calllens.coach.history import HistoryRecord, InMemoryHistoryStore
 from calllens.coach.service import CoachService
 from calllens.config import Settings
 
@@ -90,7 +88,9 @@ def test_decision_schema_validation():
 def test_evidence_presence_for_coach_and_escalate():
     svc = _fresh_service()
     for demo in build_demo_calls()[1:]:
-        dec = svc.evaluate_transcript_sync(demo.transcript, rep_id=demo.rep_id, call_id=f"ev-{demo.id}")
+        dec = svc.evaluate_transcript_sync(
+            demo.transcript, rep_id=demo.rep_id, call_id=f"ev-{demo.id}"
+        )
         assert dec.evidence, f"{demo.expected_decision} must have evidence"
         for ev in dec.evidence:
             assert ev.timestamp
@@ -101,19 +101,25 @@ def test_evidence_presence_for_coach_and_escalate():
 def test_history_gates_coaching():
     # Without history, a single isolated miss should still coach when signal strong
     # With healthy history, NO_ACTION is more likely
-    from calllens.coach.decisions import RepHistorySummary
 
     svc = _fresh_service()
     # Build a history that looks healthy
     healthy_history = InMemoryHistoryStore()
-    healthy_history.seed("rep_sarah", [
-        HistoryRecord(call_id=f"h-{i}", decision="NO_ACTION", worst_dimension="rapport", worst_score=7.0)
-        for i in range(5)
-    ])
+    healthy_history.seed(
+        "rep_sarah",
+        [
+            HistoryRecord(
+                call_id=f"h-{i}", decision="NO_ACTION", worst_dimension="rapport", worst_score=7.0
+            )
+            for i in range(5)
+        ],
+    )
     svc.history_store = healthy_history
 
     demo = build_demo_calls()[0]  # healthy
-    dec = svc.evaluate_transcript_sync(demo.transcript, rep_id="rep_sarah", call_id="hist-gate-healthy")
+    dec = svc.evaluate_transcript_sync(
+        demo.transcript, rep_id="rep_sarah", call_id="hist-gate-healthy"
+    )
     assert dec.decision == DecisionType.NO_ACTION
 
     # Coaching history should allow COACH
@@ -125,7 +131,9 @@ def test_history_gates_coaching():
     coach_store.seed("rep_daniel", seeds["rep_daniel"])
     svc2.history_store = coach_store
     demo2 = build_demo_calls()[1]
-    dec2 = svc2.evaluate_transcript_sync(demo2.transcript, rep_id="rep_daniel", call_id="hist-gate-coach")
+    dec2 = svc2.evaluate_transcript_sync(
+        demo2.transcript, rep_id="rep_daniel", call_id="hist-gate-coach"
+    )
     assert dec2.decision == DecisionType.COACH
 
 

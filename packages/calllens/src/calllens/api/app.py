@@ -59,7 +59,13 @@ def create_app(
             {"name": "rubrics", "description": "Declarative, versioned behavioral rubrics."},
             {"name": "reps", "description": "Representative analytics."},
             {"name": "evals", "description": "Evaluation harness."},
-            {"name": "coach", "description": "Coach (Strands agent) — NO_ACTION / COACH / ESCALATE with explainable evidence and human-in-the-loop."},
+            {
+                "name": "coach",
+                "description": (
+                    "Coach (Strands agent) — NO_ACTION / COACH / ESCALATE "
+                    "with explainable evidence and human-in-the-loop."
+                ),
+            },
         ],
     )
     app.add_middleware(
@@ -88,8 +94,15 @@ def create_app(
     @app.get("/health", tags=["meta"])
     async def health() -> dict:
         # Expose both legacy llm_provider and coach model for hackathon checks
-        coach_provider = settings.coach_model_provider or settings.model_provider or settings.llm_provider
-        return {"status": "ok", "llm_provider": settings.llm_provider, "coach_provider": coach_provider, "demo_mode": settings.demo_mode}
+        coach_provider = (
+            settings.coach_model_provider or settings.model_provider or settings.llm_provider
+        )
+        return {
+            "status": "ok",
+            "llm_provider": settings.llm_provider,
+            "coach_provider": coach_provider,
+            "demo_mode": settings.demo_mode,
+        }
 
     return app
 

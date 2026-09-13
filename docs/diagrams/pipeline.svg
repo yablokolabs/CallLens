@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1000 700" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="pipeline-title pipeline-desc">
+    <title id="pipeline-title">CallLens evidence-backed pipeline</title>
+    <desc id="pipeline-desc">Pipeline showing audio or transcript flowing through ingestion, ElevenLabs transcription, normalization, LangGraph orchestration with parallel deterministic metrics and semantic analysis, then evidence verification, confidence gate and bounded re-score to a CallReport.</desc>
+    <defs>
+      <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#52525b"/></marker>
+      <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6366f1"/></marker>
+      <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f46e5"/></marker>
+    </defs>
+    <rect width="100%" height="100%" fill="#f8f8f9"/>
+
+    <!-- Zone: parallel branches (drawn before arrows) -->
+    <rect x="160" y="372" width="680" height="80" rx="8" fill="rgba(24,24,27,0.02)" stroke="rgba(24,24,27,0.10)" stroke-width="0.8"/>
+    <rect x="432" y="376" width="136" height="12" rx="2" fill="#f8f8f9"/>
+    <text x="500" y="385" fill="rgba(24,24,27,0.40)" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.14em">PARALLEL BRANCHES</text>
+
+    <!-- Arrows first (behind boxes) -->
+    <!-- Input -> Ingestion -->
+    <line x1="500" y1="80" x2="500" y2="96" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <!-- Ingestion -> ElevenLabs -->
+    <line x1="500" y1="148" x2="500" y2="164" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <!-- ElevenLabs -> Normalization -->
+    <line x1="500" y1="220" x2="500" y2="236" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <!-- Normalization -> LangGraph -->
+    <line x1="500" y1="288" x2="500" y2="304" stroke="#6366f1" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+    <!-- LangGraph -> Metrics (left) -->
+    <path d="M 460,364 V 372 H 292 Q 284,372 284,380 V 384" fill="none" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <!-- LangGraph -> Semantic (right) -->
+    <path d="M 540,364 V 372 H 708 Q 716,372 716,380 V 384" fill="none" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <!-- Metrics -> Evidence -->
+    <path d="M 260,444 V 452 H 432 Q 440,452 440,460 V 464" fill="none" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <!-- Semantic -> Evidence -->
+    <path d="M 740,444 V 452 H 568 Q 560,452 560,460 V 464" fill="none" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <!-- Evidence -> Gate -->
+    <line x1="500" y1="520" x2="500" y2="532" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <!-- Gate -> Report (sufficient) -->
+    <line x1="500" y1="588" x2="500" y2="604" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <!-- Gate -> Evidence loop (insufficient, dashed) -->
+    <path d="M 544,560 H 620 Q 628,560 628,552 V 472 Q 628,464 620,464 H 608" fill="none" stroke="#52525b" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+
+    <!-- Arrow labels with mask + 6px gap -->
+    <rect x="512" y="82" width="44" height="12" rx="2" fill="#f8f8f9"/><text x="534" y="91" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">AUDIO</text>
+    <rect x="512" y="150" width="48" height="12" rx="2" fill="#f8f8f9"/><text x="536" y="159" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">INGEST</text>
+    <rect x="512" y="206" width="40" height="12" rx="2" fill="#f8f8f9"/><text x="532" y="215" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">STT</text>
+    <rect x="512" y="270" width="68" height="12" rx="2" fill="#f8f8f9"/><text x="546" y="279" fill="#6366f1" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">GRAPH</text>
+    <rect x="344" y="372" width="52" height="12" rx="2" fill="#f8f8f9"/><text x="370" y="381" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">METRICS</text>
+    <rect x="588" y="372" width="64" height="12" rx="2" fill="#f8f8f9"/><text x="620" y="381" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">SEMANTIC</text>
+    <rect x="512" y="524" width="44" height="12" rx="2" fill="#f8f8f9"/><text x="534" y="533" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">VERIFY</text>
+    <rect x="512" y="590" width="48" height="12" rx="2" fill="#f8f8f9"/><text x="536" y="599" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">REPORT</text>
+    <rect x="544" y="464" width="64" height="12" rx="2" fill="#f8f8f9"/><text x="576" y="473" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">RE-SCORE</text>
+
+    <!-- Nodes -->
+    <!-- Audio / Transcript -->
+    <rect x="420" y="32" width="160" height="48" rx="6" fill="#f8f8f9"/><rect x="420" y="32" width="160" height="48" rx="6" fill="rgba(82,82,91,0.10)" stroke="#71717a" stroke-width="1"/>
+    <rect x="428" y="40" width="28" height="12" rx="2" fill="transparent" stroke="rgba(113,113,122,0.40)" stroke-width="0.8"/><text x="442" y="49" fill="#71717a" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">INPUT</text>
+    <text x="500" y="68" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Audio / Transcript</text>
+
+    <!-- Ingestion -->
+    <rect x="410" y="96" width="180" height="52" rx="6" fill="#f8f8f9"/><rect x="410" y="96" width="180" height="52" rx="6" fill="#ffffff" stroke="#18181b" stroke-width="1"/>
+    <rect x="418" y="104" width="40" height="12" rx="2" fill="transparent" stroke="rgba(24,24,27,0.40)" stroke-width="0.8"/><text x="438" y="113" fill="#18181b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">INGEST</text>
+    <text x="500" y="132" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Ingestion</text>
+
+    <!-- ElevenLabs -->
+    <rect x="410" y="164" width="180" height="56" rx="6" fill="#f8f8f9"/><rect x="410" y="164" width="180" height="56" rx="6" fill="#ffffff" stroke="#18181b" stroke-width="1"/>
+    <rect x="418" y="172" width="32" height="12" rx="2" fill="transparent" stroke="rgba(24,24,27,0.40)" stroke-width="0.8"/><text x="434" y="181" fill="#18181b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">STT</text>
+    <text x="500" y="196" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">ElevenLabs Scribe</text>
+    <text x="500" y="208" fill="#52525b" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">STT + diarization</text>
+
+    <!-- Normalization -->
+    <rect x="410" y="236" width="180" height="52" rx="6" fill="#f8f8f9"/><rect x="410" y="236" width="180" height="52" rx="6" fill="#ffffff" stroke="#18181b" stroke-width="1"/>
+    <rect x="418" y="244" width="40" height="12" rx="2" fill="transparent" stroke="rgba(24,24,27,0.40)" stroke-width="0.8"/><text x="438" y="253" fill="#18181b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">NORMALIZE</text>
+    <text x="500" y="272" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Transcript Norm.</text>
+
+    <!-- LangGraph (focal) -->
+    <rect x="400" y="304" width="200" height="60" rx="6" fill="#f8f8f9"/><rect x="400" y="304" width="200" height="60" rx="6" fill="rgba(99,102,241,0.08)" stroke="#6366f1" stroke-width="1.2"/>
+    <rect x="408" y="312" width="44" height="12" rx="2" fill="transparent" stroke="rgba(99,102,241,0.50)" stroke-width="0.8"/><text x="430" y="321" fill="#6366f1" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">ORCHESTRATOR</text>
+    <text x="500" y="340" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">LangGraph</text>
+    <text x="500" y="352" fill="#52525b" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">graph · state</text>
+
+    <!-- Deterministic Metrics -->
+    <rect x="180" y="384" width="160" height="60" rx="6" fill="#f8f8f9"/><rect x="180" y="384" width="160" height="60" rx="6" fill="rgba(24,24,27,0.05)" stroke="#52525b" stroke-width="1"/>
+    <rect x="188" y="392" width="36" height="12" rx="2" fill="transparent" stroke="rgba(82,82,91,0.50)" stroke-width="0.8"/><text x="206" y="401" fill="#52525b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">METRICS</text>
+    <text x="260" y="420" fill="#18181b" font-size="11" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Deterministic</text>
+    <text x="260" y="432" fill="#52525b" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">talk · wpm · turns</text>
+
+    <!-- Semantic Analysis -->
+    <rect x="660" y="384" width="160" height="60" rx="6" fill="#f8f8f9"/><rect x="660" y="384" width="160" height="60" rx="6" fill="rgba(24,24,27,0.05)" stroke="#52525b" stroke-width="1"/>
+    <rect x="668" y="392" width="40" height="12" rx="2" fill="transparent" stroke="rgba(82,82,91,0.50)" stroke-width="0.8"/><text x="688" y="401" fill="#52525b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">SEMANTIC</text>
+    <text x="740" y="420" fill="#18181b" font-size="11" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Semantic</text>
+    <text x="740" y="432" fill="#52525b" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">sentiment · topics</text>
+
+    <!-- Evidence Verification -->
+    <rect x="400" y="464" width="200" height="56" rx="6" fill="#f8f8f9"/><rect x="400" y="464" width="200" height="56" rx="6" fill="#ffffff" stroke="#18181b" stroke-width="1"/>
+    <rect x="408" y="472" width="40" height="12" rx="2" fill="transparent" stroke="rgba(24,24,27,0.40)" stroke-width="0.8"/><text x="428" y="481" fill="#18181b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">VERIFY</text>
+    <text x="500" y="496" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Evidence Verification</text>
+    <text x="500" y="508" fill="#52525b" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">spans · timestamps</text>
+
+    <!-- Confidence Gate (diamond) -->
+    <polygon points="500,532 544,560 500,588 456,560" fill="rgba(99,102,241,0.08)" stroke="#6366f1" stroke-width="1.2"/>
+    <text x="500" y="556" fill="#18181b" font-size="10" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Confidence</text>
+    <text x="500" y="568" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle">gate</text>
+    <text x="556" y="556" fill="#52525b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle">≥ threshold ?</text>
+
+    <!-- CallReport -->
+    <rect x="400" y="604" width="200" height="56" rx="6" fill="#f8f8f9"/><rect x="400" y="604" width="200" height="56" rx="6" fill="rgba(24,24,27,0.05)" stroke="#52525b" stroke-width="1"/>
+    <rect x="408" y="612" width="32" height="12" rx="2" fill="transparent" stroke="rgba(82,82,91,0.50)" stroke-width="0.8"/><text x="424" y="621" fill="#52525b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">STORE</text>
+    <text x="500" y="636" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">CallReport</text>
+    <text x="500" y="648" fill="#52525b" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">scores · coaching</text>
+
+    <!-- Legend -->
+    <line x1="32" y1="676" x2="968" y2="676" stroke="rgba(24,24,27,0.10)" stroke-width="0.8"/>
+    <text x="32" y="688" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.18em">LEGEND</text>
+    <rect x="32" y="692" width="14" height="10" rx="2" fill="rgba(99,102,241,0.08)" stroke="#6366f1" stroke-width="1"/><text x="52" y="700" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Focal · LangGraph · gate</text>
+    <rect x="200" y="692" width="14" height="10" rx="2" fill="#ffffff" stroke="#18181b" stroke-width="1"/><text x="220" y="700" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Backend · ingest · verify</text>
+    <rect x="360" y="692" width="14" height="10" rx="2" fill="rgba(24,24,27,0.05)" stroke="#52525b" stroke-width="1"/><text x="380" y="700" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Store · metrics · report</text>
+    <rect x="524" y="692" width="14" height="10" rx="2" fill="rgba(82,82,91,0.10)" stroke="#71717a" stroke-width="1"/><text x="544" y="700" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Input</text>
+    <line x1="620" y1="697" x2="648" y2="697" stroke="#6366f1" stroke-width="1.4" marker-end="url(#arrow-accent)"/><text x="656" y="700" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Primary</text>
+    <line x1="716" y1="697" x2="744" y2="697" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/><text x="752" y="700" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Flow</text>
+    <line x1="800" y1="697" x2="828" y2="697" stroke="#52525b" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/><text x="836" y="700" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Re-score loop</text>
+  </svg>

@@ -69,10 +69,14 @@ async def coach_get_call(request: Request, call_id: str) -> dict:
         "evidence": [e.model_dump(mode="json") for e in dec.evidence],
         "metrics": dec.metrics,
         "rubric_context": dec.rubric_context,
-        "recommended_action": dec.recommended_action.model_dump(mode="json") if dec.recommended_action else None,
+        "recommended_action": dec.recommended_action.model_dump(mode="json")
+        if dec.recommended_action
+        else None,
         "human_review_required": dec.human_review_required,
         "trace": [t.model_dump(mode="json") for t in dec.trace],
-        "history_context": dec.history_context.model_dump(mode="json") if dec.history_context else None,
+        "history_context": dec.history_context.model_dump(mode="json")
+        if dec.history_context
+        else None,
         "call_id": dec.call_id,
         "rubric_name": dec.rubric_name,
         "model_provider": dec.model_provider,
@@ -105,10 +109,14 @@ async def coach_analyze(request: Request, body: AnalyzeBody) -> dict:
         "evidence": [e.model_dump(mode="json") for e in decision.evidence],
         "metrics": decision.metrics,
         "rubric_context": decision.rubric_context,
-        "recommended_action": decision.recommended_action.model_dump(mode="json") if decision.recommended_action else None,
+        "recommended_action": decision.recommended_action.model_dump(mode="json")
+        if decision.recommended_action
+        else None,
         "human_review_required": decision.human_review_required,
         "trace": [t.model_dump(mode="json") for t in decision.trace],
-        "history_context": decision.history_context.model_dump(mode="json") if decision.history_context else None,
+        "history_context": decision.history_context.model_dump(mode="json")
+        if decision.history_context
+        else None,
         "call_id": decision.call_id,
         "rubric_name": decision.rubric_name,
     }
@@ -121,6 +129,9 @@ async def coach_seed(request: Request) -> dict:
     decisions = svc.seed_demo()
     return {
         "seeded": len(decisions),
-        "decisions": [{"call_id": d.call_id, "decision": d.decision.value, "confidence": d.confidence} for d in decisions],
+        "decisions": [
+            {"call_id": d.call_id, "decision": d.decision.value, "confidence": d.confidence}
+            for d in decisions
+        ],
         "summary": svc.summary(),
     }

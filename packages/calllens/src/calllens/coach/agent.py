@@ -27,7 +27,9 @@ from calllens.config import Settings, get_settings
 from calllens.domain.report import CallReport
 
 
-def _get_graph_report(transcript_text: str, rubric_name: str = "consultative_sales", settings: Settings | None = None) -> CallReport:
+def _get_graph_report(
+    transcript_text: str, rubric_name: str = "consultative_sales", settings: Settings | None = None
+) -> CallReport:
     """Synchronous helper to run the CallLens graph and return a CallReport."""
     settings = settings or get_settings()
     from calllens.graphs import AnalysisGraph
@@ -42,7 +44,12 @@ def _get_graph_report(transcript_text: str, rubric_name: str = "consultative_sal
 
     async def _run() -> CallReport:
         state = await graph.run(
-            {"call_id": f"coach-{parsed.source}", "transcript": parsed, "rubric": rubric, "rubric_name": rubric_name}
+            {
+                "call_id": f"coach-{parsed.source}",
+                "transcript": parsed,
+                "rubric": rubric,
+                "rubric_name": rubric_name,
+            }
         )
         report = state["final_report"]
         assert report is not None
@@ -77,11 +84,13 @@ def _build_strands_agent(settings: Settings | None = None):
     from calllens.coach.mcp_tools import COACH_TOOLS
 
     settings = settings or get_settings()
-    provider = (settings.coach_model_provider or settings.model_provider or settings.llm_provider or "mock").lower()
+    provider = (
+        settings.coach_model_provider or settings.model_provider or settings.llm_provider or "mock"
+    ).lower()
     model_id = settings.coach_model_id or settings.bedrock_model_id or settings.llm_model
 
     # Strands models
-    model = None
+    model: Any = None
     if provider == "bedrock":
         try:
             from strands.models import BedrockModel
@@ -101,7 +110,9 @@ def _build_strands_agent(settings: Settings | None = None):
             client_args: dict[str, Any] = {}
             if settings.compatible_base_url:
                 client_args["base_url"] = settings.compatible_base_url
-            key = settings.openai_api_key or settings.compatible_api_key or settings.anthropic_api_key
+            key = (
+                settings.openai_api_key or settings.compatible_api_key or settings.anthropic_api_key
+            )
             if key:
                 client_args["api_key"] = key
             if model_id:
@@ -112,14 +123,19 @@ def _build_strands_agent(settings: Settings | None = None):
 
     system_prompt = (
         "You are CallLens Coach — an autonomous sales-coaching manager. "
-        "You review conversation analyses produced by CallLens (the evidence layer) and decide "
-        "whether anything should happen next: NO_ACTION, COACH, or ESCALATE. "
-        "Be precise and explainable: every COACH or ESCALATE cites evidence with timestamps, "
-        "a deterministic metric (e.g. rep talk ratio), and the rubric dimension. "
+        "You review conversation analyses produced by CallLens "
+        "(the evidence layer) and decide whether anything should happen "
+        "next: NO_ACTION, COACH, or ESCALATE. "
+        "Be precise and explainable: every COACH or ESCALATE cites "
+        "evidence with timestamps, a deterministic metric "
+        "(e.g. rep talk ratio), and the rubric dimension. "
         "Never invent evidence — use only what tools return. "
-        "Escalate when churn risk, serious dissatisfaction, compliance/risk, or high ambiguity is present — "
-        "those require human-in-the-loop. Otherwise coach only when evidence repeats (history shows a pattern); "
-        "a single isolated miss should be NO_ACTION. Stay concise. No hidden chain-of-thought."
+        "Escalate when churn risk, serious dissatisfaction, "
+        "compliance/risk, or high ambiguity is present — "
+        "those require human-in-the-loop. Otherwise coach only when "
+        "evidence repeats (history shows a pattern); "
+        "a single isolated miss should be NO_ACTION. Stay concise. "
+        "No hidden chain-of-thought."
     )
 
     # If no real model is available, we still want the agent to be constructible
@@ -145,7 +161,10 @@ def _build_strands_agent(settings: Settings | None = None):
                     # Emit a single assistant message wrapping tool_choice into a decision
                     # Without tools, just return a conservative text — the deterministic
                     # decide() below is the real decision for tests/demo.
-                    yield {"role": "assistant", "content": [{"text": "NO_ACTION: no material issue in mock mode."}]}
+                    yield {
+                        "role": "assistant",
+                        "content": [{"text": "NO_ACTION: no material issue in mock mode."}],
+                    }
 
             model = _CoachMockModel()
         except Exception:
@@ -157,7 +176,10 @@ def _build_strands_agent(settings: Settings | None = None):
         tools=COACH_TOOLS,  # strands-agents-sdk + mcp tagging lives here
         callback_handler=None,
         name="calllens-coach",
-        description="Autonomous conversation coach — NO_ACTION / COACH / ESCALATE with explainable evidence.",
+        description=(
+            "Autonomous conversation coach — NO_ACTION / COACH / ESCALATE "
+            "with explainable evidence."
+        ),
     )
 
 
@@ -195,6 +217,7 @@ class CoachAgent:
         history=None,
         rep_id: str | None = None,
         use_llm_message: bool = False,
+        rubric_name: str | None = None,
     ) -> CoachDecision:
         """Produce a decision from an already-analyzed CallReport.
 
@@ -220,7 +243,11 @@ class CoachAgent:
                 # Strands Agent is sync; run in a bounded way
                 result = agent(prompt)  # type: ignore[call-arg]
                 # Try to extract text from AgentResult
-                text = getattr(result, "message", None) or getattr(result, "output", None) or str(result)
+                text = (
+                    getattr(result, "message", None)
+                    or getattr(result, "output", None)
+                    or str(result)
+                )
                 if isinstance(text, dict) and "content" in text:
                     text = " ".join(
                         c.get("text", "") for c in text.get("content", []) if isinstance(c, dict)
@@ -239,10 +266,12 @@ class CoachAgent:
         # CallReport's risks/sentiment are generic, so a raw keyword scan
         # over the transcript text is needed for demo determinism.
         transcript_text = ""
-        try:
-            transcript_text = " ".join(u.text for u in getattr(report, "_raw_transcript_utterances", []) or [])
-        except Exception:
-            pass
+        import contextlib
+
+        with contextlib.suppress(Exception):
+            transcript_text = " ".join(
+                u.text for u in getattr(report, "_raw_transcript_utterances", []) or []
+            )
         decision = decide(
             report,
             history=history,
@@ -266,19 +295,46 @@ class CoachAgent:
                 decision.summary = reason
                 decision.reason = reason
                 decision.human_review_required = True
-                decision.recommended_action = RecommendedAction(type=DecisionType.ESCALATE, message=reason, urgency="high")
+                decision.recommended_action = RecommendedAction(
+                    type=DecisionType.ESCALATE, message=reason, urgency="high"
+                )
                 if not decision.evidence:
-                    decision.evidence = [DecisionEvidence(timestamp="00:01:00", seconds=60.0, quote=transcript_text[:120], reason=reason)]
+                    decision.evidence = [
+                        DecisionEvidence(
+                            timestamp="00:01:00",
+                            seconds=60.0,
+                            quote=transcript_text[:120],
+                            reason=reason,
+                        )
+                    ]
                 decision.trace = [
-                    AgentTraceStep(step="Analyzing conversation", status="done", detail="CallLens analysis completed"),
-                    AgentTraceStep(step="Checking evidence", status="done", detail="Transcript escalation signal detected"),
-                    AgentTraceStep(step="Reviewing rep history", status="done", detail=history.note if history and history.note else "5-call window checked"),
-                    AgentTraceStep(step="Decision", status="done", detail="Manager review required"),
-                    AgentTraceStep(step="Action", status="done", detail="Escalation flagged for human review"),
+                    AgentTraceStep(
+                        step="Analyzing conversation",
+                        status="done",
+                        detail="CallLens analysis completed",
+                    ),
+                    AgentTraceStep(
+                        step="Checking evidence",
+                        status="done",
+                        detail="Transcript escalation signal detected",
+                    ),
+                    AgentTraceStep(
+                        step="Reviewing rep history",
+                        status="done",
+                        detail=history.note
+                        if history and history.note
+                        else "5-call window checked",
+                    ),
+                    AgentTraceStep(
+                        step="Decision", status="done", detail="Manager review required"
+                    ),
+                    AgentTraceStep(
+                        step="Action", status="done", detail="Escalation flagged for human review"
+                    ),
                 ]
         # Record to history store for longitudinal context
         if rep_id:
             get_history_store().record(rep_id, report, decision.decision.value)
         decision.call_id = report.call_id
-        decision.rubric_name = getattr(report, "rubric_name", None) or rubric_name if "rubric_name" in dir(report) else None  # type: ignore[attr-defined]
+        decision.rubric_name = getattr(report, "rubric_name", None) or rubric_name  # type: ignore[attr-defined]
         return decision

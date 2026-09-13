@@ -19,6 +19,8 @@ from calllens.domain.report import CallReport
 
 async def _analyze_transcript(transcript: str, rubric_name: str, settings: Settings) -> CallReport:
     """Run the CallLens graph (conversation-intelligence) and return a CallReport."""
+    import contextlib
+
     from calllens.graphs import AnalysisGraph
     from calllens.ingest.parsers import parse_transcript_text
     from calllens.rubrics.loader import load_rubric
@@ -29,15 +31,18 @@ async def _analyze_transcript(transcript: str, rubric_name: str, settings: Setti
     llm = build_mock_llm(parsed)
     graph = AnalysisGraph(llm=llm, settings=settings, rubric=rubric)
     state = await graph.run(
-        {"call_id": f"coach-{parsed.source}", "transcript": parsed, "rubric": rubric, "rubric_name": rubric_name}
+        {
+            "call_id": f"coach-{parsed.source}",
+            "transcript": parsed,
+            "rubric": rubric,
+            "rubric_name": rubric_name,
+        }
     )
     report = state["final_report"]
     assert report is not None
     # Stash raw text for transcript-level escalation supplement (demo path)
-    try:
+    with contextlib.suppress(Exception):
         object.__setattr__(report, "_raw_transcript_text", transcript)  # type: ignore[attr-defined]
-    except Exception:
-        pass
     return report  # type: ignore[return-value]
 
 
@@ -50,7 +55,9 @@ def _sync_analyze(transcript: str, rubric_name: str, settings: Settings) -> Call
         import concurrent.futures
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(asyncio.run, _analyze_transcript(transcript, rubric_name, settings)).result()
+            return pool.submit(
+                asyncio.run, _analyze_transcript(transcript, rubric_name, settings)
+            ).result()
 
 
 @dataclass
@@ -81,15 +88,15 @@ class CoachService:
         rep_id: str | None = None,
         call_id: str | None = None,
     ) -> CoachDecision:
+        import contextlib
+
         self.ensure_seed()
         report = await _analyze_transcript(transcript, rubric_name, self.settings)
         if call_id:
             report.call_id = call_id  # type: ignore[attr-defined]
         # Attach raw transcript for escalation supplement
-        try:
+        with contextlib.suppress(Exception):
             object.__setattr__(report, "_raw_transcript_text", transcript)  # type: ignore[attr-defined]
-        except Exception:
-            pass
         decision = self._decide_from_report(report, rep_id=rep_id, raw_transcript=transcript)
         key = decision.call_id or report.call_id
         self._reports[key] = report
@@ -104,14 +111,14 @@ class CoachService:
         rep_id: str | None = None,
         call_id: str | None = None,
     ) -> CoachDecision:
+        import contextlib
+
         self.ensure_seed()
         report = _sync_analyze(transcript, rubric_name, self.settings)
         if call_id:
             report.call_id = call_id  # type: ignore[attr-defined]
-        try:
+        with contextlib.suppress(Exception):
             object.__setattr__(report, "_raw_transcript_text", transcript)  # type: ignore[attr-defined]
-        except Exception:
-            pass
         decision = self._decide_from_report(report, rep_id=rep_id, raw_transcript=transcript)
         key = decision.call_id or report.call_id
         self._reports[key] = report
@@ -133,10 +140,10 @@ class CoachService:
         )
         # Stash raw text on report for agent supplement as fallback
         if raw_transcript:
-            try:
+            import contextlib
+
+            with contextlib.suppress(Exception):
                 object.__setattr__(report, "_raw_transcript_text", raw_transcript)  # type: ignore[attr-defined]
-            except Exception:
-                pass
         decision = decide(report, history=history, model_provider=str(provider))
         # Transcript-level escalation supplement (demo determinism with mocks)
         if decision.decision != DecisionType.ESCALATE and raw_transcript:
@@ -166,15 +173,29 @@ class CoachService:
                         )
                     ]
                 decision.trace = [
-                    AgentTraceStep(step="Analyzing conversation", status="done", detail="CallLens analysis completed"),
-                    AgentTraceStep(step="Checking evidence", status="done", detail="Transcript escalation signal detected"),
+                    AgentTraceStep(
+                        step="Analyzing conversation",
+                        status="done",
+                        detail="CallLens analysis completed",
+                    ),
+                    AgentTraceStep(
+                        step="Checking evidence",
+                        status="done",
+                        detail="Transcript escalation signal detected",
+                    ),
                     AgentTraceStep(
                         step="Reviewing rep history",
                         status="done",
-                        detail=history.note if history and history.note else "5-call window checked",
+                        detail=history.note
+                        if history and history.note
+                        else "5-call window checked",
                     ),
-                    AgentTraceStep(step="Decision", status="done", detail="Manager review required"),
-                    AgentTraceStep(step="Action", status="done", detail="Escalation flagged for human review"),
+                    AgentTraceStep(
+                        step="Decision", status="done", detail="Manager review required"
+                    ),
+                    AgentTraceStep(
+                        step="Action", status="done", detail="Escalation flagged for human review"
+                    ),
                 ]
         if rep_id:
             self.history_store.record(rep_id, report, decision.decision.value)
@@ -186,14 +207,15 @@ class CoachService:
         self.ensure_seed()
         decisions: list[CoachDecision] = []
         for demo in build_demo_calls():
+            import contextlib
+
             report = _sync_analyze(demo.transcript, "consultative_sales", self.settings)
             report.call_id = demo.id  # type: ignore[attr-defined]
-            try:
+            with contextlib.suppress(Exception):
                 object.__setattr__(report, "_raw_transcript_text", demo.transcript)  # type: ignore[attr-defined]
-            except Exception:
-                pass
-            history = self.history_store.summary(demo.rep_id)
-            decision = self._decide_from_report(report, rep_id=demo.rep_id, raw_transcript=demo.transcript)
+            decision = self._decide_from_report(
+                report, rep_id=demo.rep_id, raw_transcript=demo.transcript
+            )
             decision.call_id = demo.id
             self._reports[demo.id] = report
             self._decisions[demo.id] = decision
@@ -201,15 +223,17 @@ class CoachService:
         # Extra healthy calls so summary matches README screenshot totals (15 / 2 / 1 = 18)
         extra_rep = "rep_extra"
         for i in range(14):
+            import contextlib
+
             cid = f"demo-extra-{i:02d}"
             dem = build_demo_calls()[0]
             report = _sync_analyze(dem.transcript, "consultative_sales", self.settings)
             report.call_id = cid  # type: ignore[attr-defined]
-            try:
+            with contextlib.suppress(Exception):
                 object.__setattr__(report, "_raw_transcript_text", dem.transcript)  # type: ignore[attr-defined]
-            except Exception:
-                pass
-            decision = self._decide_from_report(report, rep_id=extra_rep, raw_transcript=dem.transcript)
+            decision = self._decide_from_report(
+                report, rep_id=extra_rep, raw_transcript=dem.transcript
+            )
             decision.call_id = cid
             self._reports[cid] = report
             self._decisions[cid] = decision
@@ -217,12 +241,14 @@ class CoachService:
         dem2 = build_demo_calls()[1]
         report2 = _sync_analyze(dem2.transcript, "consultative_sales", self.settings)
         report2.call_id = "demo-extra-coach-01"  # type: ignore[attr-defined]
-        try:
+        import contextlib as _ctx
+
+        with _ctx.suppress(Exception):
             object.__setattr__(report2, "_raw_transcript_text", dem2.transcript)  # type: ignore[attr-defined]
-        except Exception:
-            pass
         self.history_store.seed("rep_daniel_extra", build_history_seeds()["rep_daniel"])
-        decision2 = self._decide_from_report(report2, rep_id="rep_daniel_extra", raw_transcript=dem2.transcript)
+        decision2 = self._decide_from_report(
+            report2, rep_id="rep_daniel_extra", raw_transcript=dem2.transcript
+        )
         decision2.call_id = "demo-extra-coach-01"
         self._reports[decision2.call_id] = report2
         self._decisions[decision2.call_id] = decision2
@@ -246,7 +272,12 @@ class CoachService:
         by_decision = {"NO_ACTION": 0, "COACH": 0, "ESCALATE": 0}
         for d in decs:
             by_decision[d.decision.value] += 1
-        return {"total": len(decs), "by_decision": by_decision, "today_label": "TODAY", "demo_seeded": self._seeded}
+        return {
+            "total": len(decs),
+            "by_decision": by_decision,
+            "today_label": "TODAY",
+            "demo_seeded": self._seeded,
+        }
 
     def rep_history(self, rep_id: str) -> dict:
         self.ensure_seed()

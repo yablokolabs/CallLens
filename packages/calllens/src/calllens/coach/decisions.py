@@ -157,7 +157,7 @@ def _build_evidence_from_rubric(report: CallReport, max_items: int = 3) -> list[
     for sc in report.rubric_scores:
         r = sc.result
         # Prefer negative evidence (what went wrong) for coaching; positive for context
-        for ev in (r.negative_evidence[:2] + r.positive_evidence[:1]):
+        for ev in r.negative_evidence[:2] + r.positive_evidence[:1]:
             evid.append(
                 DecisionEvidence(
                     timestamp=_format_ts(ev.start_time),
@@ -211,9 +211,7 @@ def _history_supports_coaching(history: RepHistorySummary | None, low_dims: list
         return True
     # Without enough repetition, treat as isolated — NO_ACTION is more honest
     # For demo determinism, if total_calls is small, allow one strong signal
-    if history.total_calls <= 2 and low_dims:
-        return True
-    return False
+    return bool(history.total_calls <= 2 and low_dims)
 
 
 # --- Deterministic escalation detection (fast, explainable) ---
@@ -229,7 +227,7 @@ _RISK_RE = re.compile(r"\b(legal|compliance|lawsuit|sue|regulatory|inappropriate
 def detect_escalation(report: CallReport) -> tuple[bool, str, float]:
     """Return (should_escalate, reason, confidence) — deterministic, explainable."""
     texts: list[str] = []
-    for u in (report.topics or []):
+    for u in report.topics or []:
         texts.append(getattr(u, "topic", "") or "")
     for r in report.risks:
         texts.append(r.description)
@@ -243,7 +241,7 @@ def detect_escalation(report: CallReport) -> tuple[bool, str, float]:
             texts.append(ev.transcript_excerpt)
             texts.append(ev.explanation)
     # Coaching insights also carry signal
-    for c in (report.coaching or []):
+    for c in report.coaching or []:
         texts.append(c.recommendation)
         texts.append(c.rationale)
     frustration = 0.0
@@ -269,11 +267,15 @@ def _build_trace(
     decision: DecisionType,
 ) -> list[AgentTraceStep]:
     base = [
-        AgentTraceStep(step="Analyzing conversation", status="done", detail="CallLens analysis completed"),
+        AgentTraceStep(
+            step="Analyzing conversation", status="done", detail="CallLens analysis completed"
+        ),
         AgentTraceStep(
             step="Checking evidence",
             status="done",
-            detail=f"{sum(len(s.result.positive_evidence) + len(s.result.negative_evidence) for s in report.rubric_scores)} evidence spans found",
+            detail=(  # noqa: E501 — diagnostic count, not user-facing copy
+                f"{sum(len(s.result.positive_evidence) + len(s.result.negative_evidence) for s in report.rubric_scores)} evidence spans found"  # noqa: E501
+            ),
         ),
         AgentTraceStep(
             step="Reviewing rep history",
@@ -338,7 +340,12 @@ def decide(
                 "overall_score": float(report.overall_score),
             },
             rubric_context=[
-                {"dimension": s.dimension, "label": s.label, "score": s.result.score, "confidence": s.result.confidence}
+                {
+                    "dimension": s.dimension,
+                    "label": s.label,
+                    "score": s.result.score,
+                    "confidence": s.result.confidence,
+                }
                 for s in report.rubric_scores[:6]
             ],
             recommended_action=RecommendedAction(
@@ -359,12 +366,16 @@ def decide(
     low_talk_issue = talk_ratio >= HIGH_TALK_RATIO
     question_issue = False
     if metrics is not None:
-        question_issue = metrics.open_question_count < MIN_OPEN_QUESTIONS_FOR_HEALTHY and talk_ratio > 0.60
+        question_issue = (
+            metrics.open_question_count < MIN_OPEN_QUESTIONS_FOR_HEALTHY and talk_ratio > 0.60
+        )
 
     # Require at least one core dimension low AND either a metric violation
     # or 2+ core dimensions low. This keeps healthy calls (one peripheral dip
     # plus 3 questions) as NO_ACTION while still catching talk-heavy misses.
-    has_coaching_signal = bool(low_dims) and (low_talk_issue or question_issue or len(low_dims) >= 2)
+    has_coaching_signal = bool(low_dims) and (
+        low_talk_issue or question_issue or len(low_dims) >= 2
+    )
     history_ok = _history_supports_coaching(history, low_dims) if has_coaching_signal else False
 
     if has_coaching_signal and history_ok:
@@ -401,7 +412,12 @@ def decide(
                 "wpm": float(metrics.words_per_minute) if metrics else 0.0,
             },
             rubric_context=[
-                {"dimension": s.dimension, "label": s.label, "score": s.result.score, "confidence": s.result.confidence}
+                {
+                    "dimension": s.dimension,
+                    "label": s.label,
+                    "score": s.result.score,
+                    "confidence": s.result.confidence,
+                }
                 for s in report.rubric_scores[:6]
             ],
             recommended_action=RecommendedAction(
@@ -421,7 +437,9 @@ def decide(
         decision=DecisionType.NO_ACTION,
         confidence=0.89,
         summary="No material coaching or escalation condition detected.",
-        reason="No material coaching or escalation condition detected — silence is the correct action.",
+        reason=(
+            "No material coaching or escalation condition detected — silence is the correct action."
+        ),
         evidence=[],
         metrics={
             "rep_talk_ratio": round(talk_ratio, 3),
@@ -429,7 +447,12 @@ def decide(
             "open_questions": int(metrics.open_question_count) if metrics else 0,
         },
         rubric_context=[
-            {"dimension": s.dimension, "label": s.label, "score": s.result.score, "confidence": s.result.confidence}
+            {
+                "dimension": s.dimension,
+                "label": s.label,
+                "score": s.result.score,
+                "confidence": s.result.confidence,
+            }
             for s in report.rubric_scores[:6]
         ],
         recommended_action=None,

@@ -14,7 +14,9 @@ _CHURN_RE = re.compile(
     r"\b(cancel|cancellation|churn|terminate|leaving|leave us|switching to|going with|canceling)\b",
     re.I,
 )
-_ANGER_RE = re.compile(r"\b(unacceptable|furious|angry|disgusted|never again|worst|outage|lost data)\b", re.I)
+_ANGER_RE = re.compile(
+    r"\b(unacceptable|furious|angry|disgusted|never again|worst|outage|lost data)\b", re.I
+)
 
 
 def transcript_has_escalation(transcript_text: str) -> tuple[bool, str, float]:

@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from calllens.api import create_app
-from calllens.coach.demo import build_demo_calls, _transcript_healthy
+from calllens.coach.demo import build_demo_calls
 
 
 @pytest.fixture
@@ -79,7 +79,9 @@ def test_coach_list_and_get(client):
 
 def test_coach_analyze_healthy_no_action(client):
     demo = build_demo_calls()[0]
-    resp = client.post("/api/coach/analyze", json={"transcript": demo.transcript, "rep_id": "rep_sarah"})
+    resp = client.post(
+        "/api/coach/analyze", json={"transcript": demo.transcript, "rep_id": "rep_sarah"}
+    )
     assert resp.status_code == 200
     body = resp.json()
     assert body["decision"] == "NO_ACTION"
@@ -88,14 +90,18 @@ def test_coach_analyze_healthy_no_action(client):
 
 def test_coach_analyze_coaching(client):
     demo = build_demo_calls()[1]
-    resp = client.post("/api/coach/analyze", json={"transcript": demo.transcript, "rep_id": "rep_daniel"})
+    resp = client.post(
+        "/api/coach/analyze", json={"transcript": demo.transcript, "rep_id": "rep_daniel"}
+    )
     assert resp.status_code == 200
     assert resp.json()["decision"] == "COACH"
 
 
 def test_coach_analyze_escalation(client):
     demo = build_demo_calls()[2]
-    resp = client.post("/api/coach/analyze", json={"transcript": demo.transcript, "rep_id": "rep_maya"})
+    resp = client.post(
+        "/api/coach/analyze", json={"transcript": demo.transcript, "rep_id": "rep_maya"}
+    )
     assert resp.status_code == 200
     body = resp.json()
     assert body["decision"] == "ESCALATE"
