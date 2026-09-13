@@ -85,10 +85,14 @@ export default function CoachPage() {
   }, []);
 
   useEffect(() => {
+    // data fetch on mount — setState in fetch callback is intentional
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
 
   useEffect(() => {
+    // derive initial selection from fetched calls — not cascading derived state
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (calls && calls.length && !selectedId) setSelectedId(calls[0].call_id);
   }, [calls, selectedId]);
 
