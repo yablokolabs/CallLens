@@ -53,3 +53,6 @@ evals/reports/*
 !evals/reports/.gitkeep
 data/
 uploads/
+
+# ── Generated docs (build artifacts — regenerate with scripts/render_architecture_pdf.js)
+docs/*.pdf
