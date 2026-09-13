@@ -156,8 +156,12 @@ def _build_strands_agent(
     model = _resolve_model(report, history, call_id, transcript, rubric_name, settings)
 
     # Sarvam's tool-calling is sensitive to prompt length — keep it tighter for sarvam
-    is_sarvam = (settings.coach_model_provider or settings.model_provider or "").lower() == "sarvam" or (
-        settings.sarvam_api_key and (settings.coach_model_provider or settings.llm_provider or "").lower() not in ("mock", "openai", "compatible", "bedrock")
+    is_sarvam = (
+        settings.coach_model_provider or settings.model_provider or ""
+    ).lower() == "sarvam" or (
+        settings.sarvam_api_key
+        and (settings.coach_model_provider or settings.llm_provider or "").lower()
+        not in ("mock", "openai", "compatible", "bedrock")
     )
     if is_sarvam:
         system_prompt = (
