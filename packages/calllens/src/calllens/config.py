@@ -24,22 +24,25 @@ class Settings(BaseSettings):
     elevenlabs_tts_voice_id: str = "JBFqnCBsd6RMkjVDRZzb"
 
     # ── Reasoning LLM provider ───────────────────────────────────────
-    llm_provider: str = "mock"  # mock | openai | anthropic | compatible | bedrock
+    llm_provider: str = "mock"  # mock | openai | anthropic | compatible | bedrock | sarvam
     llm_model: str = "gpt-4o-mini"
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
     compatible_base_url: str | None = None
     compatible_api_key: str | None = None
+    sarvam_api_key: str | None = None
+    sarvam_model_id: str = "sarvam-105b"
+    sarvam_base_url: str = "https://api.sarvam.ai/v1"
     llm_temperature: float = 0.1
     llm_max_tokens: int = 4096
     # Amazon Bedrock (for agentic-ai via strands-agents-sdk)
-    model_provider: str | None = None  # bedrock | openai | anthropic | compatible | mock
+    model_provider: str | None = None  # bedrock | openai | anthropic | compatible | mock | sarvam
     aws_region: str | None = None
     aws_access_key_id: str | None = None
     aws_secret_access_key: str | None = None
     bedrock_model_id: str | None = None
     # Coach (Strands) overrides — if unset, coach inherits the LLM provider above
-    coach_model_provider: str | None = None
+    coach_model_provider: str | None = None  # mock | openai | compatible | bedrock | sarvam
     coach_model_id: str | None = None
 
     # ── Pipeline ─────────────────────────────────────────────────────

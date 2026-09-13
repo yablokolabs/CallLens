@@ -82,7 +82,15 @@ def _resolve_model(
 
     # Try real providers first
     model: Any = None
-    if provider == "bedrock":
+    if provider == "sarvam":
+        try:
+            from calllens.coach.sarvam_model import SarvamModel
+
+            model = SarvamModel(model_id=model_id or "sarvam-105b")
+            return model
+        except Exception:
+            model = None
+    elif provider == "bedrock":
         try:
             from strands.models import BedrockModel
 
@@ -147,28 +155,43 @@ def _build_strands_agent(
     settings = settings or get_settings()
     model = _resolve_model(report, history, call_id, transcript, rubric_name, settings)
 
-    system_prompt = (
-        "You are CallLens Coach — an autonomous sales-coaching manager. "
-        "You review conversation analyses produced by CallLens "
-        "(the evidence layer) and decide whether anything should happen "
-        "next: NO_ACTION, COACH, or ESCALATE. "
-        "Be precise and explainable: every COACH or ESCALATE cites "
-        "evidence with timestamps, a deterministic metric "
-        "(e.g. rep talk ratio), and the rubric dimension. "
-        "Never invent evidence — use only what tools return. "
-        "Escalate when churn risk, serious dissatisfaction, "
-        "compliance/risk, or high ambiguity is present — "
-        "those require human-in-the-loop. Otherwise coach only when "
-        "evidence repeats (history shows a pattern); "
-        "a single isolated miss should be NO_ACTION. "
-        "Call check_escalation_signals early. "
-        "Call get_call_evidence and get_rep_history to gather context. "
-        "Then call the matching action tool: "
-        "record_agent_decision for NO_ACTION, "
-        "create_coaching_action for COACH, "
-        "escalate_to_manager for ESCALATE — before returning your "
-        "structured CoachDecision. Stay concise. No hidden chain-of-thought."
+    # Sarvam's tool-calling is sensitive to prompt length — keep it tighter for sarvam
+    is_sarvam = (settings.coach_model_provider or settings.model_provider or "").lower() == "sarvam" or (
+        settings.sarvam_api_key and (settings.coach_model_provider or settings.llm_provider or "").lower() not in ("mock", "openai", "compatible", "bedrock")
     )
+    if is_sarvam:
+        system_prompt = (
+            "You are CallLens Coach. Call check_escalation_signals, get_call_evidence, get_rep_history, "
+            "then the matching action tool (record_agent_decision for NO_ACTION, create_coaching_action for COACH, "
+            "escalate_to_manager for ESCALATE) before returning CoachDecision. "
+            "Rules: ESCALATE only on churn/cancel/dissatisfaction signal. "
+            "COACH only when discovery/rapport score <4.5 AND history shows repeated pattern (discovery_issue>=2 or similar). "
+            "Otherwise NO_ACTION. A single isolated miss (even 5.0 on a peripheral dimension like adjacent_cross_sell) "
+            "with no history pattern is NO_ACTION. Never invent evidence. Keep confidence 0-1."
+        )
+    else:
+        system_prompt = (
+            "You are CallLens Coach — an autonomous sales-coaching manager. "
+            "You review conversation analyses produced by CallLens "
+            "(the evidence layer) and decide whether anything should happen "
+            "next: NO_ACTION, COACH, or ESCALATE. "
+            "Be precise and explainable: every COACH or ESCALATE cites "
+            "evidence with timestamps, a deterministic metric "
+            "(e.g. rep talk ratio), and the rubric dimension. "
+            "Never invent evidence — use only what tools return. "
+            "Escalate when churn risk, serious dissatisfaction, "
+            "compliance/risk, or high ambiguity is present — "
+            "those require human-in-the-loop. Otherwise coach only when "
+            "evidence repeats (history shows a pattern); "
+            "a single isolated miss should be NO_ACTION. "
+            "Call check_escalation_signals early. "
+            "Call get_call_evidence and get_rep_history to gather context. "
+            "Then call the matching action tool: "
+            "record_agent_decision for NO_ACTION, "
+            "create_coaching_action for COACH, "
+            "escalate_to_manager for ESCALATE — before returning your "
+            "structured CoachDecision. Stay concise. No hidden chain-of-thought."
+        )
 
     return Agent(
         model=model,
