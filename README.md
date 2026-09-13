@@ -235,7 +235,7 @@ Every completed evaluation produces a structured decision:
 
 `ESCALATE` sets `human_review_required: true`; `NO_ACTION` explains why no interruption was warranted. No hidden chain-of-thought is exposed — only a concise activity trace and user-facing rationale.
 
-Provider abstraction is preserved so Bedrock can be enabled via configuration (see **Configuration**). Local development defaults to the deterministic mock LLM — no paid calls required.
+Provider abstraction is preserved so Sarvam (live-tested via `SarvamModel` on `sarvam-105b`) and Bedrock can be enabled via configuration (see **Configuration**). Local development defaults to the deterministic mock LLM — no paid calls required; use `mock` for recording, `COACH_MODEL_PROVIDER=sarvam` for live judging if needed.
 
 ---
 
@@ -484,17 +484,19 @@ See [`.env.example`](.env.example). Key vars:
 | Var | Purpose | Required |
 |---|---|---|
 | `ELEVENLABS_API_KEY` | Speech provider (Scribe v2) | No — mock fallback |
-| `LLM_PROVIDER` | `mock` (default) · `openai` · `anthropic` · `compatible` · `bedrock` | No |
+| `LLM_PROVIDER` | `mock` (default) · `openai` · `anthropic` · `compatible` · `bedrock` · `sarvam` | No |
 | `LLM_MODEL` / `MODEL_ID` | Model id for the selected provider | No |
 | `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Vendor keys | If provider selected |
 | `COMPATIBLE_BASE_URL` / `COMPATIBLE_API_KEY` | OpenAI-compatible endpoint | If `compatible` |
 | `MODEL_PROVIDER` / `BEDROCK_MODEL_ID` / `AWS_REGION` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Bedrock (enabled via config, fallback preserved) | No — only if Bedrock is used |
+| `SARVAM_API_KEY` / `SARVAM_MODEL_ID` / `SARVAM_BASE_URL` | Sarvam AI (string-only OpenAI-compatible, via `SarvamModel`) | No — only if Sarvam is used |
+| `COACH_MODEL_PROVIDER` / `COACH_MODEL_ID` | Coach override (`sarvam` live-tested as `sarvam-105b` @ `https://api.sarvam.ai/v1`; `mock` for deterministic recording) | No — defaults to `LLM_PROVIDER` |
 | `DATABASE_URL` | `postgresql+asyncpg://…` or `sqlite+aiosqlite://…` | No — defaults to SQLite |
 | `CONFIDENCE_THRESHOLD` / `MAX_RESCORE_ATTEMPTS` | Pipeline knobs | No |
 | `DEMO_MODE` | Seed synthetic demo calls | No |
 | `NEXT_PUBLIC_API_URL` | Frontend API base | No — defaults to `http://localhost:8000` |
 
-Bedrock is designed as a configuration switch (model-provider abstraction), not a migration. The app runs on Azure VM by default; Bedrock is only claimed when actually implemented and tested.
+Sarvam is live-tested (`sarvam-105b` via `SarvamModel` + `COACH_MODEL_PROVIDER=sarvam`) and deterministic mock remains the default for recording. Bedrock is designed as a configuration switch (model-provider abstraction), not a migration. The app runs on Azure VM by default; Bedrock is only claimed when actually implemented and tested.
 
 ---
 
@@ -525,6 +527,7 @@ Dimension weights must sum to `1.0`. See [rubrics/](rubrics/) and [docs/custom-r
 | Reasoning LLM | Anthropic | `LLM_PROVIDER=anthropic`, `ANTHROPIC_API_KEY`, `LLM_MODEL` |
 | Reasoning LLM | Any OpenAI-compatible endpoint | `LLM_PROVIDER=compatible`, `COMPATIBLE_BASE_URL`, `COMPATIBLE_API_KEY` |
 | Reasoning LLM | Amazon Bedrock | `MODEL_PROVIDER=bedrock`, `AWS_REGION`, `BEDROCK_MODEL_ID` |
+| Reasoning LLM | Sarvam AI (string-only, live-tested) | `COACH_MODEL_PROVIDER=sarvam`, `SARVAM_API_KEY`, `SARVAM_MODEL_ID=sarvam-105b` @ `https://api.sarvam.ai/v1` (via `SarvamModel`) |
 | Reasoning LLM | Offline mock (default) | `LLM_PROVIDER=mock` |
 
 All tests and CI run against mocks — no paid API calls.
