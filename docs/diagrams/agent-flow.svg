@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1000 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="coach-seq-title coach-seq-desc">
+    <title id="coach-seq-title">CallLens Coach agent decision flow</title>
+    <desc id="coach-seq-desc">Sequence diagram showing the Strands Coach Agent calling CallLens MCP analysis, evidence and metrics tools, then rep history, then producing a NO_ACTION, COACH or ESCALATE decision.</desc>
+    <defs>
+      <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#52525b"/></marker>
+      <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6366f1"/></marker>
+      <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f46e5"/></marker>
+      <marker id="arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0, 8 3, 0 6" fill="none" stroke="#52525b" stroke-width="1.2"/></marker>
+    </defs>
+    <rect width="100%" height="100%" fill="#f8f8f9"/>
+
+    <!-- Actor row y=56, boxes 144x40, centers: 148, 308, 508, 716, 860 -->
+    <!-- Lifelines from y=96 to 540, dashed, at each center -->
+    <line x1="148" y1="96" x2="148" y2="540" stroke="rgba(24,24,27,0.20)" stroke-width="1" stroke-dasharray="3,3"/>
+    <line x1="308" y1="96" x2="308" y2="540" stroke="rgba(24,24,27,0.20)" stroke-width="1" stroke-dasharray="3,3"/>
+    <line x1="508" y1="96" x2="508" y2="540" stroke="rgba(24,24,27,0.20)" stroke-width="1" stroke-dasharray="3,3"/>
+    <line x1="716" y1="96" x2="716" y2="540" stroke="rgba(24,24,27,0.20)" stroke-width="1" stroke-dasharray="3,3"/>
+    <line x1="860" y1="96" x2="860" y2="540" stroke="rgba(24,24,27,0.20)" stroke-width="1" stroke-dasharray="3,3"/>
+
+    <!-- Activation bars (narrow 8px wide, centered) -->
+    <rect x="504" y="128" width="8" height="280" fill="rgba(99,102,241,0.10)" stroke="#6366f1" stroke-width="0.8"/>
+    <rect x="304" y="140" width="8" height="40" fill="rgba(24,24,27,0.06)" stroke="#52525b" stroke-width="0.8"/>
+    <rect x="712" y="196" width="8" height="40" fill="rgba(24,24,27,0.06)" stroke="#52525b" stroke-width="0.8"/>
+    <rect x="856" y="252" width="8" height="40" fill="rgba(24,24,27,0.06)" stroke="#52525b" stroke-width="0.8"/>
+
+    <!-- Messages (y ordered, labels above arrows) -->
+    <!-- 1: Next.js -> Strands: analyze call -->
+    <line x1="148" y1="136" x2="504" y2="136" stroke="#4f46e5" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+    <rect x="296" y="116" width="64" height="12" rx="2" fill="#f8f8f9"/><text x="328" y="125" fill="#4f46e5" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">ANALYZE</text>
+    <!-- 2: Strands -> CallLens: analyze_transcript -->
+    <line x1="512" y1="164" x2="312" y2="164" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="368" y="144" width="96" height="12" rx="2" fill="#f8f8f9"/><text x="416" y="153" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">ANALYZE_CALL</text>
+    <!-- return: report -->
+    <line x1="312" y1="180" x2="512" y2="180" stroke="#52525b" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+    <rect x="380" y="184" width="48" height="12" rx="2" fill="#f8f8f9"/><text x="404" y="193" fill="#52525b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">REPORT</text>
+    <!-- 3: Strands -> CallLens: get evidence -->
+    <line x1="512" y1="208" x2="720" y2="208" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="560" y="188" width="96" height="12" rx="2" fill="#f8f8f9"/><text x="608" y="197" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">GET_EVIDENCE</text>
+    <!-- return: evidence -->
+    <line x1="720" y1="232" x2="512" y2="232" stroke="#52525b" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+    <rect x="576" y="236" width="64" height="12" rx="2" fill="#f8f8f9"/><text x="608" y="245" fill="#52525b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">EVIDENCE</text>
+    <!-- 4: Strands -> History: get_rep_history -->
+    <line x1="512" y1="268" x2="864" y2="268" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="640" y="248" width="96" height="12" rx="2" fill="#f8f8f9"/><text x="688" y="257" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">GET_HISTORY</text>
+    <!-- return: history -->
+    <line x1="864" y1="288" x2="512" y2="288" stroke="#52525b" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+    <rect x="664" y="292" width="56" height="12" rx="2" fill="#f8f8f9"/><text x="692" y="301" fill="#52525b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">HISTORY</text>
+
+    <!-- Combined fragment ALT for decision (y=316, h=148) spanning 148..860 -->
+    <rect x="132" y="316" width="740" height="148" rx="4" fill="rgba(24,24,27,0.02)" stroke="rgba(24,24,27,0.22)" stroke-width="1"/>
+    <rect x="132" y="316" width="40" height="16" rx="2" fill="#f8f8f9" stroke="rgba(24,24,27,0.22)" stroke-width="1"/>
+    <text x="152" y="328" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.12em">ALT</text>
+    <text x="184" y="328" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.04em">[healthy]</text>
+    <!-- region divider -->
+    <line x1="140" y1="372" x2="864" y2="372" stroke="rgba(24,24,27,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="144" y="388" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.04em">[coaching warranted]</text>
+    <text x="144" y="460" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.04em">[else — escalate]</text>
+    <line x1="140" y1="436" x2="864" y2="436" stroke="rgba(24,24,27,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+
+    <!-- ALT region 1: NO_ACTION (accent focal) -->
+    <line x1="512" y1="352" x2="148" y2="352" stroke="#6366f1" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+    <rect x="280" y="332" width="80" height="12" rx="2" fill="#f8f8f9"/><text x="320" y="341" fill="#6366f1" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">NO_ACTION · 0.89</text>
+    <!-- ALT region 2: COACH -->
+    <line x1="512" y1="408" x2="148" y2="408" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="280" y="392" width="88" height="12" rx="2" fill="#f8f8f9"/><text x="324" y="401" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">COACH · 0.91 + evidence</text>
+    <!-- ALT region 3: ESCALATE -->
+    <line x1="512" y1="468" x2="860" y2="468" stroke="#52525b" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+    <rect x="640" y="448" width="88" height="12" rx="2" fill="#f8f8f9"/><text x="684" y="457" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">ESCALATE → human</text>
+
+    <!-- Actors -->
+    <!-- Dashboard -->
+    <rect x="84" y="56" width="128" height="40" rx="6" fill="#f8f8f9"/><rect x="84" y="56" width="128" height="40" rx="6" fill="#ffffff" stroke="#18181b" stroke-width="1"/>
+    <rect x="92" y="64" width="28" height="12" rx="2" fill="transparent" stroke="rgba(24,24,27,0.40)" stroke-width="0.8"/><text x="106" y="73" fill="#18181b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">WEB</text>
+    <text x="148" y="86" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Dashboard</text>
+    <!-- Next.js fallback label if needed but keep as Dashboard per spec -->
+
+    <!-- Strands Coach (focal) -->
+    <rect x="428" y="56" width="160" height="40" rx="6" fill="#f8f8f9"/><rect x="428" y="56" width="160" height="40" rx="6" fill="rgba(99,102,241,0.08)" stroke="#6366f1" stroke-width="1.2"/>
+    <rect x="436" y="64" width="36" height="12" rx="2" fill="transparent" stroke="rgba(99,102,241,0.50)" stroke-width="0.8"/><text x="454" y="73" fill="#6366f1" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">AGENT</text>
+    <text x="508" y="86" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Coach Agent</text>
+
+    <!-- CallLens Engine -->
+    <rect x="244" y="56" width="128" height="40" rx="6" fill="#f8f8f9"/><rect x="244" y="56" width="128" height="40" rx="6" fill="rgba(24,24,27,0.05)" stroke="#52525b" stroke-width="1"/>
+    <rect x="252" y="64" width="28" height="12" rx="2" fill="transparent" stroke="rgba(82,82,91,0.50)" stroke-width="0.8"/><text x="266" y="73" fill="#52525b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">MCP</text>
+    <text x="308" y="86" fill="#18181b" font-size="11" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">CallLens</text>
+
+    <!-- Rep History -->
+    <rect x="796" y="56" width="128" height="40" rx="6" fill="#f8f8f9"/><rect x="796" y="56" width="128" height="40" rx="6" fill="rgba(24,24,27,0.05)" stroke="#52525b" stroke-width="1"/>
+    <rect x="804" y="64" width="32" height="12" rx="2" fill="transparent" stroke="rgba(82,82,91,0.50)" stroke-width="0.8"/><text x="820" y="73" fill="#52525b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">STORE</text>
+    <text x="860" y="86" fill="#18181b" font-size="11" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Rep History</text>
+
+    <!-- Manager -->
+    <rect x="652" y="56" width="128" height="40" rx="6" fill="#f8f8f9"/><rect x="652" y="56" width="128" height="40" rx="6" fill="rgba(24,24,27,0.02)" stroke="rgba(24,24,27,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+    <rect x="660" y="64" width="40" height="12" rx="2" fill="transparent" stroke="rgba(24,24,27,0.20)" stroke-width="0.8"/><text x="680" y="73" fill="#71717a" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">HUMAN</text>
+    <text x="716" y="86" fill="#18181b" font-size="11" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Manager</text>
+
+    <!-- Footer note for escalation -->
+    <line x1="132" y1="500" x2="872" y2="500" stroke="rgba(24,24,27,0.10)" stroke-width="0.8"/>
+    <text x="132" y="516" fill="#71717a" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.06em">Human-in-the-loop: only ESCALATE requires approval · COACH is explainable with timestamps</text>
+
+    <!-- Legend -->
+    <line x1="32" y1="556" x2="968" y2="556" stroke="rgba(24,24,27,0.10)" stroke-width="0.8"/>
+    <text x="32" y="572" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.18em">LEGEND</text>
+    <rect x="32" y="580" width="14" height="10" rx="2" fill="rgba(99,102,241,0.08)" stroke="#6366f1" stroke-width="1"/><text x="52" y="588" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Focal · decision</text>
+    <line x1="176" y1="585" x2="204" y2="585" stroke="#4f46e5" stroke-width="1.2" marker-end="url(#arrow-link)"/><text x="212" y="588" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">HTTP</text>
+    <line x1="260" y1="585" x2="288" y2="585" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/><text x="296" y="588" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Tool call</text>
+    <line x1="356" y1="585" x2="384" y2="585" stroke="#52525b" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/><text x="392" y="588" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Return / escalate</text>
+    <rect x="512" y="580" width="14" height="10" rx="2" fill="#ffffff" stroke="#18181b" stroke-width="1"/><text x="532" y="588" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Backend</text>
+    <rect x="596" y="580" width="14" height="10" rx="2" fill="rgba(24,24,27,0.02)" stroke="rgba(24,24,27,0.20)" stroke-width="1" stroke-dasharray="4,3"/><text x="616" y="588" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Human</text>
+  </svg>

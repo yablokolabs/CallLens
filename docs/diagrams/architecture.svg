@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1000 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="coach-arch-title coach-arch-desc">
+    <title id="coach-arch-title">CallLens Coach system architecture</title>
+    <desc id="coach-arch-desc">Architecture showing calls flowing through Next.js to FastAPI to the Strands Coach Agent, which orchestrates CallLens MCP analysis and rep history to produce NO_ACTION, COACH or ESCALATE decisions.</desc>
+    <defs>
+      <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#52525b"/></marker>
+      <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6366f1"/></marker>
+      <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f46e5"/></marker>
+    </defs>
+    <rect width="100%" height="100%" fill="#f8f8f9"/>
+
+    <!-- Zone: evidence & memory (drawn before arrows) -->
+    <rect x="160" y="360" width="680" height="116" rx="8" fill="rgba(24,24,27,0.02)" stroke="rgba(24,24,27,0.10)" stroke-width="0.8"/>
+    <rect x="468" y="364" width="64" height="12" rx="2" fill="#f8f8f9"/>
+    <text x="500" y="373" fill="rgba(24,24,27,0.40)" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.14em">EVIDENCE &amp; MEMORY</text>
+
+    <!-- Arrows first (behind boxes) -->
+    <!-- User -> Next.js -->
+    <line x1="500" y1="80" x2="500" y2="108" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <!-- Next.js -> FastAPI -->
+    <line x1="500" y1="164" x2="500" y2="196" stroke="#4f46e5" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+    <!-- FastAPI -> Strands -->
+    <line x1="500" y1="252" x2="500" y2="284" stroke="#6366f1" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+    <!-- Strands -> CallLens Engine (left) -->
+    <path d="M 460,348 V 368 H 292 Q 284,368 284,376 V 388" fill="none" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <!-- Strands -> Rep History (right) -->
+    <path d="M 540,348 V 368 H 708 Q 716,368 716,376 V 388" fill="none" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <!-- Strands -> Decision (center, behind zone but in gap) -->
+    <line x1="500" y1="348" x2="500" y2="488" stroke="#6366f1" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+    <!-- Dashed returns: evidence back to Strands -->
+    <path d="M 284,452 V 376 Q 284,368 292,368 H 452 V 356" fill="none" stroke="#52525b" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+    <path d="M 716,452 V 376 Q 716,368 708,368 H 548 V 356" fill="none" stroke="#52525b" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+    <!-- Decision -> Manager (human-in-the-loop) -->
+    <path d="M 600,516 H 712 Q 720,516 720,524 V 528" fill="none" stroke="#52525b" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+
+    <!-- Arrow labels with mask + 6px gap -->
+    <rect x="512" y="86" width="40" height="12" rx="2" fill="#f8f8f9"/><text x="532" y="95" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">AUDIO</text>
+    <rect x="512" y="172" width="72" height="12" rx="2" fill="#f8f8f9"/><text x="548" y="181" fill="#4f46e5" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">POST /coach</text>
+    <rect x="512" y="260" width="52" height="12" rx="2" fill="#f8f8f9"/><text x="538" y="269" fill="#6366f1" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">INVOKE</text>
+    <rect x="328" y="368" width="68" height="12" rx="2" fill="#f8f8f9"/><text x="362" y="377" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">MCP TOOLS</text>
+    <rect x="572" y="368" width="56" height="12" rx="2" fill="#f8f8f9"/><text x="600" y="377" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">HISTORY</text>
+    <rect x="512" y="412" width="48" height="12" rx="2" fill="#f8f8f9"/><text x="536" y="421" fill="#6366f1" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">DECIDE</text>
+    <rect x="624" y="496" width="72" height="12" rx="2" fill="#f8f8f9"/><text x="660" y="505" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">ESCALATE</text>
+
+    <!-- Nodes -->
+    <!-- User / Calls -->
+    <rect x="416" y="32" width="168" height="48" rx="6" fill="#f8f8f9"/><rect x="416" y="32" width="168" height="48" rx="6" fill="rgba(82,82,91,0.10)" stroke="#71717a" stroke-width="1"/>
+    <rect x="424" y="40" width="28" height="12" rx="2" fill="transparent" stroke="rgba(113,113,122,0.40)" stroke-width="0.8"/><text x="438" y="49" fill="#71717a" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">INPUT</text>
+    <text x="500" y="68" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">User / Calls</text>
+
+    <!-- Next.js -->
+    <rect x="408" y="108" width="184" height="56" rx="6" fill="#f8f8f9"/><rect x="408" y="108" width="184" height="56" rx="6" fill="#ffffff" stroke="#18181b" stroke-width="1"/>
+    <rect x="416" y="116" width="32" height="12" rx="2" fill="transparent" stroke="rgba(24,24,27,0.40)" stroke-width="0.8"/><text x="432" y="125" fill="#18181b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">WEB</text>
+    <text x="500" y="144" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Next.js Dashboard</text>
+    <text x="500" y="156" fill="#52525b" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">/coach · evidence panel</text>
+
+    <!-- FastAPI -->
+    <rect x="408" y="196" width="184" height="56" rx="6" fill="#f8f8f9"/><rect x="408" y="196" width="184" height="56" rx="6" fill="#ffffff" stroke="#18181b" stroke-width="1"/>
+    <rect x="416" y="204" width="28" height="12" rx="2" fill="transparent" stroke="rgba(24,24,27,0.40)" stroke-width="0.8"/><text x="430" y="213" fill="#18181b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">API</text>
+    <text x="500" y="228" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">FastAPI</text>
+    <text x="500" y="240" fill="#52525b" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">/api/coach/* · /health</text>
+
+    <!-- Strands Coach Agent (focal) -->
+    <rect x="404" y="284" width="192" height="64" rx="6" fill="#f8f8f9"/><rect x="404" y="284" width="192" height="64" rx="6" fill="rgba(99,102,241,0.08)" stroke="#6366f1" stroke-width="1.2"/>
+    <rect x="412" y="292" width="44" height="12" rx="2" fill="transparent" stroke="rgba(99,102,241,0.50)" stroke-width="0.8"/><text x="434" y="301" fill="#6366f1" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">AGENT</text>
+    <text x="500" y="320" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Strands Coach Agent</text>
+    <text x="500" y="336" fill="#52525b" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">NO_ACTION · COACH · ESCALATE</text>
+
+    <!-- CallLens Engine -->
+    <rect x="200" y="388" width="168" height="64" rx="6" fill="#f8f8f9"/><rect x="200" y="388" width="168" height="64" rx="6" fill="rgba(24,24,27,0.05)" stroke="#52525b" stroke-width="1"/>
+    <rect x="208" y="396" width="28" height="12" rx="2" fill="transparent" stroke="rgba(82,82,91,0.50)" stroke-width="0.8"/><text x="222" y="405" fill="#52525b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">MCP</text>
+    <text x="284" y="420" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">CallLens Engine</text>
+    <text x="284" y="436" fill="#52525b" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">LangGraph · scoring</text>
+
+    <!-- Rep History -->
+    <rect x="632" y="388" width="168" height="64" rx="6" fill="#f8f8f9"/><rect x="632" y="388" width="168" height="64" rx="6" fill="rgba(24,24,27,0.05)" stroke="#52525b" stroke-width="1"/>
+    <rect x="640" y="396" width="32" height="12" rx="2" fill="transparent" stroke="rgba(82,82,91,0.50)" stroke-width="0.8"/><text x="656" y="405" fill="#52525b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">STORE</text>
+    <text x="716" y="420" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Rep History</text>
+    <text x="716" y="436" fill="#52525b" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">SQLite · 5-call window</text>
+
+    <!-- Decision -->
+    <rect x="400" y="488" width="200" height="56" rx="6" fill="#f8f8f9"/><rect x="400" y="488" width="200" height="56" rx="6" fill="#ffffff" stroke="#18181b" stroke-width="1"/>
+    <rect x="408" y="496" width="40" height="12" rx="2" fill="transparent" stroke="rgba(24,24,27,0.40)" stroke-width="0.8"/><text x="428" y="505" fill="#18181b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">DECISION</text>
+    <text x="500" y="524" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Agent Decision</text>
+    <text x="500" y="536" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle">NO_ACTION · COACH · ESCALATE</text>
+
+    <!-- Manager (optional) -->
+    <rect x="704" y="504" width="152" height="48" rx="6" fill="#f8f8f9"/><rect x="704" y="504" width="152" height="48" rx="6" fill="rgba(24,24,27,0.02)" stroke="rgba(24,24,27,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+    <rect x="712" y="512" width="40" height="12" rx="2" fill="transparent" stroke="rgba(24,24,27,0.20)" stroke-width="0.8"/><text x="732" y="521" fill="#71717a" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">HUMAN</text>
+    <text x="780" y="536" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Manager Review</text>
+
+    <!-- Legend -->
+    <line x1="32" y1="576" x2="968" y2="576" stroke="rgba(24,24,27,0.10)" stroke-width="0.8"/>
+    <text x="32" y="592" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.18em">LEGEND</text>
+    <rect x="32" y="600" width="14" height="10" rx="2" fill="rgba(99,102,241,0.08)" stroke="#6366f1" stroke-width="1"/><text x="52" y="608" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Focal · Strands decision</text>
+    <rect x="200" y="600" width="14" height="10" rx="2" fill="#ffffff" stroke="#18181b" stroke-width="1"/><text x="220" y="608" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Backend · API / Web</text>
+    <rect x="360" y="600" width="14" height="10" rx="2" fill="rgba(24,24,27,0.05)" stroke="#52525b" stroke-width="1"/><text x="380" y="608" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Store · Engine / History</text>
+    <rect x="524" y="600" width="14" height="10" rx="2" fill="rgba(82,82,91,0.10)" stroke="#71717a" stroke-width="1"/><text x="544" y="608" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Input</text>
+    <line x1="620" y1="605" x2="648" y2="605" stroke="#6366f1" stroke-width="1.4" marker-end="url(#arrow-accent)"/><text x="656" y="608" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Primary</text>
+    <line x1="716" y1="605" x2="744" y2="605" stroke="#4f46e5" stroke-width="1.2" marker-end="url(#arrow-link)"/><text x="752" y="608" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">HTTP</text>
+    <line x1="800" y1="605" x2="828" y2="605" stroke="#52525b" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/><text x="836" y="608" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Return · escalate</text>
+  </svg>

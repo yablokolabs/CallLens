@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1000 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="coach-flow-title coach-flow-desc">
+    <title id="coach-flow-title">CallLens Coach decision logic</title>
+    <desc id="coach-flow-desc">Flowchart showing how the coach decides NO_ACTION, COACH or ESCALATE from metrics, rubric scores, evidence, and rep history.</desc>
+    <defs>
+      <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#52525b"/></marker>
+      <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6366f1"/></marker>
+    </defs>
+    <rect width="100%" height="100%" fill="#f8f8f9"/>
+
+    <!-- Layout: top-down, diamond decisions centered x=500 -->
+    <!-- Start oval -->
+    <rect x="420" y="40" width="160" height="40" rx="20" fill="#f8f8f9" stroke="#52525b" stroke-width="1"/>
+    <text x="500" y="64" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Call analyzed</text>
+    <!-- Arrow -->
+    <line x1="500" y1="80" x2="500" y2="116" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+    <!-- Step: deterministic metrics -->
+    <rect x="380" y="116" width="240" height="48" rx="6" fill="#ffffff" stroke="#18181b" stroke-width="1"/>
+    <text x="500" y="138" fill="#18181b" font-size="11" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Deterministic metrics</text>
+    <text x="500" y="152" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle">talk ratio · wpm · sentiment</text>
+    <line x1="500" y1="164" x2="500" y2="200" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+    <!-- Decision 1: escalation? (diamond) -->
+    <!-- Diamond centered at 500,200+60 -->
+    <polygon points="500,200 620,252 500,304 380,252" fill="#ffffff" stroke="#18181b" stroke-width="1.2"/>
+    <text x="500" y="244" fill="#18181b" font-size="11" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Escalation</text>
+    <text x="500" y="256" fill="#18181b" font-size="11" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">signal?</text>
+    <text x="500" y="272" fill="#71717a" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle">churn · anger · risk</text>
+
+    <!-- YES -> ESCALATE (right) -->
+    <path d="M 620,252 H 740 Q 748,252 748,260 V 304" fill="none" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="628" y="232" width="32" height="12" rx="2" fill="#f8f8f9"/><text x="644" y="241" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">YES</text>
+    <rect x="668" y="304" width="160" height="48" rx="6" fill="rgba(24,24,27,0.02)" stroke="rgba(24,24,27,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+    <rect x="676" y="312" width="40" height="12" rx="2" fill="transparent" stroke="rgba(24,24,27,0.20)" stroke-width="0.8"/><text x="696" y="321" fill="#71717a" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">HUMAN</text>
+    <text x="748" y="336" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">ESCALATE</text>
+    <text x="748" y="348" fill="#52525b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle">human_review: true</text>
+
+    <!-- NO down -->
+    <line x1="500" y1="304" x2="500" y2="340" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="512" y="312" width="24" height="12" rx="2" fill="#f8f8f9"/><text x="524" y="321" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">NO</text>
+
+    <!-- Decision 2: coaching evidence? -->
+    <polygon points="500,340 620,392 500,444 380,392" fill="rgba(99,102,241,0.08)" stroke="#6366f1" stroke-width="1.2"/>
+    <text x="500" y="384" fill="#18181b" font-size="11" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Coaching</text>
+    <text x="500" y="396" fill="#18181b" font-size="11" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">evidence?</text>
+    <text x="500" y="412" fill="#6366f1" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle">rubric &lt; 6 + evidence</text>
+
+    <!-- YES -> History check (right) -->
+    <path d="M 620,392 H 740 Q 748,392 748,400 V 432" fill="none" stroke="#6366f1" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+    <rect x="628" y="372" width="32" height="12" rx="2" fill="#f8f8f9"/><text x="644" y="381" fill="#6366f1" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">YES</text>
+    <rect x="668" y="432" width="160" height="40" rx="6" fill="#ffffff" stroke="#18181b" stroke-width="1"/>
+    <text x="748" y="452" fill="#18181b" font-size="11" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">Check history</text>
+    <text x="748" y="464" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle">4/5 calls = pattern?</text>
+
+    <!-- From history -> COACH (down) -->
+    <line x1="748" y1="472" x2="748" y2="496" stroke="#6366f1" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+    <rect x="756" y="480" width="52" height="12" rx="2" fill="#f8f8f9"/><text x="782" y="489" fill="#6366f1" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">PATTERN</text>
+    <rect x="668" y="496" width="160" height="48" rx="6" fill="rgba(99,102,241,0.08)" stroke="#6366f1" stroke-width="1.2"/>
+    <text x="748" y="520" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">COACH</text>
+    <text x="748" y="534" fill="#6366f1" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle">evidence · timestamp · metric</text>
+
+    <!-- NO from coaching evidence -> NO_ACTION (down-left) -->
+    <line x1="500" y1="444" x2="500" y2="504" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="512" y="460" width="24" height="12" rx="2" fill="#f8f8f9"/><text x="524" y="469" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">NO</text>
+
+    <!-- NO_ACTION oval -->
+    <rect x="404" y="504" width="192" height="40" rx="20" fill="#ffffff" stroke="#18181b" stroke-width="1"/>
+    <text x="500" y="524" fill="#18181b" font-size="12" font-weight="600" font-family="'Geist',sans-serif" text-anchor="middle">NO_ACTION ✓</text>
+    <text x="500" y="536" fill="#52525b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle">doing nothing is correct</text>
+
+    <!-- Also: single-occurrence low score -> NO_ACTION (history shows isolated) -->
+    <path d="M 668,452 H 500 V 504" fill="none" stroke="#52525b" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+    <rect x="548" y="436" width="64" height="12" rx="2" fill="#f8f8f9"/><text x="580" y="445" fill="#52525b" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">ISOLATED</text>
+
+    <!-- Legend -->
+    <line x1="32" y1="580" x2="968" y2="580" stroke="rgba(24,24,27,0.10)" stroke-width="0.8"/>
+    <text x="32" y="596" fill="#52525b" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.18em">LEGEND</text>
+    <polygon points="40,606 54,614 40,622 26,614" fill="rgba(99,102,241,0.08)" stroke="#6366f1" stroke-width="1"/><text x="64" y="617" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Focal decision</text>
+    <polygon points="180,606 194,614 180,622 166,614" fill="#ffffff" stroke="#18181b" stroke-width="1"/><text x="204" y="617" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Decision / step</text>
+    <rect x="320" y="606" width="28" height="16" rx="10" fill="#ffffff" stroke="#18181b" stroke-width="1"/><text x="356" y="617" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Terminal</text>
+    <line x1="420" y1="614" x2="448" y2="614" stroke="#6366f1" stroke-width="1.4" marker-end="url(#arrow-accent)"/><text x="456" y="617" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Primary path</text>
+    <line x1="540" y1="614" x2="568" y2="614" stroke="#52525b" stroke-width="1.2" marker-end="url(#arrow)"/><text x="576" y="617" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Check</text>
+    <line x1="624" y1="614" x2="652" y2="614" stroke="#52525b" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/><text x="660" y="617" fill="#52525b" font-size="8.5" font-family="'Geist',sans-serif">Isolated → no coach</text>
+  </svg>
